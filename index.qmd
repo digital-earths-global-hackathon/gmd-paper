@@ -1,0 +1,48 @@
+---
+title: "km scales hacked at global scale"
+author:
+  - name: Florian Ziemen
+  - name: Lukas Kluft
+  - name: Tobias Kölling
+  - name: Mark Mütz
+  - name: Sam Greenfield
+  - name: Andrew Gettelman
+  - name: put your name here
+format:
+  html:
+    toc: true
+---
+## Key points for this paper
+
+* Pulled off a 600-person 10-location multi-model intercomparison with one year of run-up and close to no dedicated resources, using a tech stack that was new to n-1 teams.
+
+* 10 nodes around the globe
+  * different backgrounds / resources
+  * same view on data
+* X models, regional + global
+  * standardized names (or provided as Zarr)
+  * Output remapped to HEALPix
+  * Data stored in Zarr with
+  * Indexed with intake 0.7
+* Common python base stack
+  * Jupyterhub setup at several locations
+
+## Abstract
+
+## Introduction
+
+* previous intercomparisons
+  * CMIP
+    * 
+  * DYAMOND Summer, Winter
+    * Summer: come as you are, no standardization
+    * Winter: worked our way through to netCDF, some standardization
+    * Year: 
+      * All remapped to HEALPix, 
+      * zarr
+      * Common catalog with online DS as backup
+      * 
+* km-scale hackathons
+  * nextGEMS, EERIE, ...
+* Paradigm shift towards opening data
+
