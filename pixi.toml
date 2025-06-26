@@ -1,0 +1,29 @@
+[workspace]
+name = "lecture-materials"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+
+[pypi-dependencies]
+beautifulsoup4 = "*"
+aiohttp = "*"
+icalendar = "*"
+intake = "*"
+intake-xarray = "*"
+jupyter = "*"
+jupyter-cache = "*"
+markdown2 = "*"
+matplotlib = "*"
+pyyaml = "*"
+pre-commit = "*"
+requests = "*"
+xarray = "*"
+zarr = "*"
+
+[dependencies]
+python = "=3.12"
+netcdf4 = ">=1.7.2"
+quarto = "==1.6.40"
+
+[tasks]
+render = { cmd = ["quarto", "render", "index.qmd"] }
+preview = { cmd = ["quarto", "preview", "index.qmd", "--no-navigate"] }
