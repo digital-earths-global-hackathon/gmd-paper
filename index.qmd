@@ -54,6 +54,12 @@ format:
       * zarr
       * Common catalog with online DS as backup in github
       * Shared environment spec for easy set-up of similar/identical workflow env
+
+## Tech team
+  * Some nodes have dedicated tech staff, sometimes the PIs took the role
+  * Some previous contacts but no dedicated meeting prior to hackathon
+  * Communication via Mattermost, Github, and a bit of zoom
+
 ## Tech stack
 
 ### Catalog
