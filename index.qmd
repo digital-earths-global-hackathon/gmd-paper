@@ -68,11 +68,13 @@ format:
   * support for variants (time, zoom) in open call
   * same structure for all locations, so sharing code is easy
   * some support for multi-file datasets
+  * easy to handle
 
 * Market
-  * Intake 0.7
-  * Intake 2.0
-  * STAC
+  * Intake 0.7 does all of this, but is outdated
+  * Intake 2.0 does not do the variants, complex format
+  * STAC does not do the opening, does not do the variants, does not like more than one file per entry (asset)
+* Solution: Intake 0.7
 * Outlook
   * Improve STAC
   * Work towards cleaner datasets
@@ -85,10 +87,13 @@ format:
   * Equal Area
 
 * Market
-  * Lat/Lon
-  * ICON / ...
-  * Gaussian reduced
-  * HEALPix
+  * Lat/Lon (not equal area, 50% data overhead compared to equal area for same res at eq)
+  * ICON / ... usually no direct computations between lat/lon and index
+  * Gaussian reduced no SFC
+  * HEALPix Ticks all boxes.
+* Solution: HEALPix, regional grids by storing indices with the data, and filling chunks with NaN around data
+* Outlook:
+  * Improve support for differential operators / ...
 
 ### Data format
 * Requirements
@@ -96,6 +101,97 @@ format:
   * Chunking in all dimensions
   * Works via network
 * Market
-  * netCDF (+Kerchunk)
-  * Zarr
-  * GRIB (+Kerchunk)
+  * netCDF (+Kerchunk) Can be served as zarr via remote. Needs kerchunk to get fast opening of full DS, that's only supported in py
+  * Zarr Ticks all boxes
+  * GRIB (+Kerchunk) (all downsides of netCDF + miserable chunking)
+* Solution: Mostly zarr, bits of GRIB hidden behind server, causing some trouble.
+* Outlook:
+  * Go to zarr3 to get rid of small files on disk, once more widely supported
+  * Improve netCDF support for zarr3
+
+### Python environment
+* Requirements
+  * Python stack that can open and do standard analysis on data
+* Market
+  * conda(forge) works, and includes pip support
+  * pip needs a python
+  * pixi is nicer, but less known, conda-(forge) based
+* Solution: Conda recipe in github with some CI testing
+* Outlook:
+  * Consider pixi
+
+### HPC access
+* Requirements
+  * Nodes with some compute power for data-intensive analyses
+  * User-friendly scripting environment
+  * Nodes with internet access for working with remote datasets
+* Market
+  * JPH has no requirements on user side, bit of hassle to install server
+  * VS Code needs user with VS code, and server that has not completely outdated OS, otherwise easy on server side
+  * Other editors can do similar things
+* Solution:
+  * Most nodes JPH
+  * VS Code / ... also used
+* Outlook:
+  * By and large good, proxies would be useful.
+
+### Communication platform
+* Requirements
+  * Easy accounts for all participants
+  * Intuitive usage
+* Market
+  * Slack / other commercial - usually restricted in free mode
+  * mpi-m mattermost - easy, free for mpi-related projects
+* Outlook:
+  * keep as is
+
+### Code sharing
+* Requirements
+  * Easy accounts for all participants
+  * Some review process
+* Market
+  * Self-hosted gitlab - works, but a bit messy on the accounts
+  * github.com - many people already have accounts
+  * other cloud providers - most don't have accounts
+* Solution: Github code repo w/ a bit of PR review
+* Outlook
+  * Train people beforehand
+  * Only allow for %-style notebooks without embedded figures?
+
+### Custom python packages
+* easygems
+* UXArray
+
+### Documentation
+* easy.gems
+* pythia
+
+## Preparation
+
+* Some talks on data concept in Fall 2024
+* Explanatory examples on easy.gems
+* All remap their datasets to HEALPix
+* All convert data to zarr
+* Difficulties
+  * Many runs arrive last-minute
+  * Lack of dedicated staff, so things only happen last-minute
+  * Zoo of formats / variants
+
+### Remapping
+* Algorithms
+  * NN
+  * Triangles
+* Tools
+  * Python
+  * CDO 
+  * YAC / on the fly
+
+
+### Zarr-ification
+* Often as part of remap
+* Rechunking can be hard for GRIB / stupid layouts
+* eerie.cloud as fallback for IFS
+
+### Hierarchy generation
+* Generally easy
+* Some issues with missing values / regional grids
