@@ -44,5 +44,43 @@ format:
       * 
 * km-scale hackathons
   * nextGEMS, EERIE, ...
-* Paradigm shift towards opening data
 
+## Tech stack
+
+### Catalog
+* Requirements
+  * easy to load data
+  * support for variants (time, zoom) in open call
+  * same structure for all locations, so sharing code is easy
+  * some support for multi-file datasets
+
+* Market
+  * Intake 0.7
+  * Intake 2.0
+  * STAC
+* Outlook
+  * Improve STAC
+  * Work towards cleaner datasets
+
+### Grid
+* Requirements
+  * Spatially coherent storage
+  * Hierarchies
+  * Easy access
+  * Equal Area
+
+* Market
+  * Lat/Lon
+  * ICON / ...
+  * Gaussian reduced
+  * HEALPix
+
+### Data format
+* Requirements
+  * Open big datasets fast
+  * Chunking in all dimensions
+  * Works via network
+* Market
+  * netCDF (+Kerchunk)
+  * Zarr
+  * GRIB (+Kerchunk)
