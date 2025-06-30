@@ -196,3 +196,14 @@ format:
 ### Hierarchy generation
 * Generally easy
 * Some issues with missing values / regional grids
+
+### Copying data
+* rclone
+* globus
+* difficult with last-minute data-set arrivals
+* Much of data usually not used, so a bit of a waste if data can be cached on-demand
+
+### Catalog building
+* Intake0.7
+* Script that merges catalogs with online catalog
+* Web page with brief descriptions
