@@ -31,20 +31,29 @@ format:
 
 ## Introduction
 
+* km-scale as a revolution in climate workflows
+  * previously 100km scale, now 5 km scale
+  * factor 20 horizontally yields 400 in data volume per record
+  * new workflows necessary
+
+* Paradigm shift towards opening data
+  * traditional approach (netCDF / ...) copy data over in explicit file transfers, then access those
+  * Network access via Zarr - only what you really need is transferred, and that without your intervention
+* Data sharing as default
+* Common catalog that merges all datasets available online
 * previous intercomparisons
   * CMIP
-    * 
   * DYAMOND Summer, Winter
     * Summer: come as you are, no standardization
     * Winter: worked our way through to netCDF, some standardization
-    * Year: 
-      * All remapped to HEALPix, 
-      * zarr
-      * Common catalog with online DS as backup
-      * 
 * km-scale hackathons
   * nextGEMS, EERIE, ...
 
+* Global hackathon: 
+      * All remapped to HEALPix, 
+      * zarr
+      * Common catalog with online DS as backup in github
+      * Shared environment spec for easy set-up of similar/identical workflow env
 ## Tech stack
 
 ### Catalog
