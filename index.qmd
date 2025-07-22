@@ -238,7 +238,7 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
 
 ### Documentation
 * easy.gems
-  * Curated collection of minimal examples for analysis codes
+  * Curated collection of examples for analysis codes showing access and plot methods, not a collection of analysis scripts
   * Instructions for creating own scripts for converting data to HEALPix / Zarr
 * pythia -> TODO: Julia Kent?
 
