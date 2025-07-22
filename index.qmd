@@ -30,6 +30,9 @@ format:
 
 ## Abstract
 
+We present the results and technical achievements of a global, multi-model intercomparison hackathon involving over 600 participants across 10 locations. Despite minimal dedicated resources and a largely new technology stack for most teams, we successfully standardized and remapped outputs from a diverse set of regional and global climate models to a common HEALPix grid, storing the data in Zarr format and indexing it with Intake 0.7. This unified approach enabled all participating nodes—regardless of background or resources—to access and analyze the same datasets efficiently. A common Python base stack, deployed via JupyterHub at several sites, facilitated collaborative analysis and reproducibility. Our experience demonstrates the feasibility and benefits of rapid, large-scale, distributed climate data analysis using modern open-source tools and cloud-ready data formats.
+
+
 ## Introduction
 
 * km-scale as a revolution in climate workflows
@@ -160,8 +163,12 @@ format:
   * Only allow for %-style notebooks without embedded figures?
 
 ### Custom python packages
-* easygems
+* easygems - basic functions for use of HEALPix in climate context
+  * `healpix_show` for efficient plotting
+  * delauney triangulation for remap
+  * healpix to lat/lon
 * UXArray
+  * Xarray extension for unstructured grids
 
 ### Documentation
 * easy.gems
