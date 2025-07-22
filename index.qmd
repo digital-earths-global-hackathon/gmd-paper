@@ -8,6 +8,7 @@ author:
   - name: Sam Greenfield
   - name: Andrew Gettelman
   - name: Fabian Wachsmann
+  - name: Orhan Eroglu
   - name: put your name here
 format:
   html:
@@ -109,6 +110,13 @@ We present the results and technical achievements of a global, multi-model inter
   * Zarr Ticks all boxes
   * GRIB (+Kerchunk) (all downsides of netCDF + miserable chunking)
 * Solution: Mostly zarr, bits of GRIB hidden behind server, causing some trouble.
+  * Zarr 2, as zarr 3 support is still not there in libraries other than python, e.g. `libnetcdf`.
+  * Chunks as basic unit
+    * Compression requires read/write of entire chunks
+    * Compromise between file system limits (inode quotas / availablity, IOPS), and desire for small chunks to limit accidental loading.
+    * Known for quite a while, e.g. [2013 Unidata blog entry](https://www.unidata.ucar.edu/blogs/developer/entry/chunking_data_why_it_matters)
+    * Use a compromise between time series and map access
+    * Many processing / analysis tools still think in maps, so weigh a bit in direction of maps.
 * Outlook:
   * Go to zarr3 to get rid of small files on disk, once more widely supported
   * Improve netCDF support for zarr3
@@ -145,7 +153,7 @@ We present the results and technical achievements of a global, multi-model inter
   * Intuitive usage
 * Market
   * Slack / other commercial - usually restricted in free mode
-  * mpi-m mattermost - easy, free for mpi-related projects
+  * mpi-m mattermost - easy, free for mpi-related projects, sends e-mails in case of mentions.
 * Outlook:
   * keep as is
 
@@ -167,17 +175,23 @@ We present the results and technical achievements of a global, multi-model inter
   * `healpix_show` for efficient plotting
   * delauney triangulation for remap
   * healpix to lat/lon
-* UXArray
+* UXArray -> TODO: Orhan
   * Xarray extension for unstructured grids
+  * Allowed participants to leverage familiar xarray-based analysis tools on HEALPix grid geometries without custom code 
 
 ### Documentation
 * easy.gems
-* pythia
+  * Curated collection of minimal examples for analysis codes
+  * Instructions for creating own scripts for converting data to HEALPix / Zarr
+* pythia -> TODO: Julia Kent?
 
 ## Preparation
 
-* Some talks on data concept in Fall 2024
-* Explanatory examples on easy.gems
+* Talks on data concept in Fall 2024
+  * Explaining the ideas behind the tech stack to all teams
+  * Slides for several talks were kept available via [hackathon page](https://digital-earths-global-hackathon.github.io/talks/)
+
+* [Explanatory examples](https://easy.gems.dkrz.de/Processing/healpix/index.html) on easy.gems
 * All remap their datasets to HEALPix
 * All convert data to zarr
 * Difficulties
@@ -187,18 +201,19 @@ We present the results and technical achievements of a global, multi-model inter
 
 ### Remapping
 * Algorithms
-  * NN
-  * Triangles
+  * NN - Simple, keeps columns intact for extreme value analysis or analysis of non-linear properties (T - rel hum - spec hum), damages gradient and similar operators
+  * Delaunay Triangulation - keeps gradients intact, damages extreme values / ...
+  * Conservative - assuming great circles as cell edges, should not do much damage at high res.
 * Tools
-  * Python
-  * CDO 
-  * YAC / on the fly
-
+  * YAC / on the fly - various algorithms available, including distance weighted, conservative, NN. ICON used NN to one too high grid, and then cons aggregation, needs to be integrated with model prior to running.
+  * CDO - Various, see YAC
+  * Python - Dalaunay and NN expamples provided (?)
+* Challenges for regional data with missing value mask
 
 ### Zarr-ification
 * Often as part of remap
-* Rechunking can be hard for GRIB / stupid layouts
-* eerie.cloud as fallback for IFS
+* Rechunking can be hard for GRIB / stupid layouts - IFS was done in two-pass
+* gribscan + eerie.cloud as fallback for IFS, ended up overloaded.
 
 ### Hierarchy generation
 * Generally easy
