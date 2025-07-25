@@ -55,10 +55,10 @@ We present the results and technical achievements of a global, multi-model inter
   * nextGEMS, EERIE, ...
 
 * Global hackathon: 
-      * All remapped to HEALPix, 
-      * zarr
-      * Common catalog with online DS as backup in github
-      * Shared environment spec for easy set-up of similar/identical workflow env
+  * All remapped to HEALPix, 
+  * zarr
+  * Common catalog with online DS as backup in github
+  * Shared environment spec for easy set-up of similar/identical workflow env
 
 ## Tech team
   * Some nodes have dedicated tech staff, sometimes the PIs took the role
