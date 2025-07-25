@@ -64,6 +64,7 @@ We present the results and technical achievements of a global, multi-model inter
   * Some nodes have dedicated tech staff, sometimes the PIs took the role
   * Some previous contacts but no dedicated meeting prior to hackathon
   * Communication via Mattermost, Github, and a bit of zoom
+  * Most experienced tech staff flew out to other nodes to assist them
 
 ## Tech stack
 
