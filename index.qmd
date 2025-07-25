@@ -4,7 +4,7 @@ author:
   - name: Florian Ziemen
   - name: Lukas Kluft
   - name: Tobias Kölling
-  - name: Mark Muetzefeld
+  - name: Mark Muetzefeldt
   - name: Sam Greenfield
   - name: Andrew Gettelman
   - name: Fabian Wachsmann
