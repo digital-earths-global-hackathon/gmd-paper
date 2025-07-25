@@ -106,7 +106,7 @@ There's some unit (roughly like a result of one simulation), which we want to ad
   * ICON / ... usually no direct computations between lat/lon and index
   * Gaussian reduced no SFC
   * HEALPix Ticks all boxes.
-* Solution: HEALPix, regional grids by storing indices with the data, and filling chunks with NaN around data
+* Solution: HEALPix, regional grids by storing indices with the data for active chunks, and filling grid cells with NaN around data
 * Outlook
   * Fix data format specification (e.g. CF) to allow tools to grow
   * Improve support for differential operators / ...
