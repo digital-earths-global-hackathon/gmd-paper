@@ -185,10 +185,8 @@ Zarr (like HDF5, but separates chunking logic from storage logic, which simplifi
 * Market
   * Slack / other commercial - usually restricted in free mode
   * mpi-m mattermost - easy, free for mpi-related projects, sends e-mails in case of mentions.
-
-:::::: {.callout-note}
-Tobi: Keep Matrix in the back of our heads
-:::
+ * Outlook
+   * Mattermost worked very well. Matrix might be of interest as alternative.
 
 ### Code sharing
 * Requirements
@@ -199,8 +197,10 @@ Tobi: Keep Matrix in the back of our heads
   * other cloud providers - most don't have accounts
 * Solution: Github code repo w/ a bit of PR review
 * Outlook
+  * Carefully review situation and options before next hackathon
   * Train people beforehand
-  * Only allow for %-style notebooks without embedded figures and have CI in place to run the notebooks  
+  * Only allow for %-style notebooks without embedded figures and have CI in place to run the notebooks
+  * Keep tech stack limited
 
 ::: {.callout-note}
 
