@@ -4,9 +4,11 @@ author:
   - name: Florian Ziemen
   - name: Lukas Kluft
   - name: Tobias Kölling
-  - name: Mark Mütz
+  - name: Mark Muetzefeldt
   - name: Sam Greenfield
   - name: Andrew Gettelman
+  - name: Fabian Wachsmann
+  - name: Orhan Eroglu
   - name: put your name here
 format:
   html:
@@ -29,20 +31,262 @@ format:
 
 ## Abstract
 
+We present the results and technical achievements of a global, multi-model intercomparison hackathon involving over 600 participants across 10 teams. Despite minimal dedicated resources and a largely new technology stack for most teams, we successfully standardized and remapped outputs from a diverse set of regional and global climate models to a common HEALPix grid, storing the data in Zarr format and indexing it with Intake 0.7. This unified approach enabled all participating teams—regardless of background or resources—to access and analyze the same datasets efficiently. A common Python based stack, deployed via JupyterHub by most teams, facilitated collaborative analysis and reproducibility. Our experience demonstrates the feasibility and benefits of rapid, large-scale, distributed climate data analysis using modern open-source tools and cloud-ready data formats.
+
+
 ## Introduction
 
+* km-scale as a revolution in climate workflows
+  * previously 100km scale, now 5 km scale
+  * factor 20 horizontally yields 400 in data volume per record
+  * new workflows necessary
+
+* Paradigm shift from classic *downloading* towards *opening* data
+  * traditional approach (netCDF / ...) copy data over in explicit file transfers, then access those
+  * Network access via Zarr - only what you really need is transferred, and that without your intervention
+* Data sharing as default
+* Common catalog that merges all datasets available online
 * previous intercomparisons
   * CMIP
-    * 
   * DYAMOND Summer, Winter
     * Summer: come as you are, no standardization
     * Winter: worked our way through to netCDF, some standardization
-    * Year: 
-      * All remapped to HEALPix, 
-      * zarr
-      * Common catalog with online DS as backup
-      * 
 * km-scale hackathons
   * nextGEMS, EERIE, ...
-* Paradigm shift towards opening data
 
+* Global hackathon: 
+  * All remapped to HEALPix, 
+  * zarr
+  * Common catalog with online DS as backup in github
+  * Shared environment spec for easy set-up of similar/identical workflow env
+
+## Tech team
+  * Some nodes have dedicated tech staff, sometimes the PIs took the role
+  * Some previous contacts but no dedicated meeting prior to hackathon
+  * Communication via Mattermost, Github, and a bit of zoom
+  * Most experienced tech staff flew out to other nodes to assist them
+
+## Tech stack
+
+### Catalog
+* Requirements
+  * easy to load data
+  * support for variants (time, zoom) in open call
+  * same structure for all locations, so sharing code is easy
+  * some support for multi-file datasets
+  * easy to handle
+
+* Market
+  * Intake 0.7 does all of this, but is outdated
+  * Intake 2.0 does not do the variants, complex format
+  * STAC does not do the opening, does not do the variants, does not like more than one file per entry (asset)
+* Solution: Intake 0.7
+* Outlook
+  * Improve STAC
+  * Work towards cleaner datasets
+  * Maybe adopt `DataTree` or similar structures which allow a single catalog entry to incorporate variants -> this would enable compatibility with Intake 2.0 and STAC (and likely most other tools)
+
+:::::: {.callout-note}
+Tobi:
+We've used variants in the catalog (which I think was the best option for the hackathon due to time constraints), but it might be possible to also have variants after the open call e.g. DataTree. I think the future will go towards someting like that, but the main point remains:
+
+There's some unit (roughly like a result of one simulation), which we want to address through a catalog entry, and there's another (smaller) unit, which forms the biggest reasonable dataset. The differentiation between these units can be called variants and accessing the data works best if we first address the outer unit and then (optionally) select a variant.
+:::
+
+
+### Grid
+* Requirements
+  * Spatially coherent storage
+  * Hierarchies
+  * Easy access
+  * Equal Area
+
+* Market
+  * Lat/Lon (not equal area, 50% data overhead compared to equal area for same res at eq)
+  * ICON / ... usually no direct computations between lat/lon and index
+  * Gaussian reduced no SFC
+  * HEALPix Ticks all boxes.
+* Solution: HEALPix, regional grids by storing indices with the data for active chunks, and filling grid cells with NaN around data
+* Outlook
+  * Fix data format specification (e.g. CF) to allow tools to grow
+  * Improve support for differential operators / ...
+  * General tooling
+
+### Data format
+* Requirements
+  * Open big datasets fast
+  * Chunking in all dimensions
+  * Works via network
+* Market
+  * netCDF (+Kerchunk) Can be served as zarr via remote. Needs kerchunk to get fast opening of full DS, that's only supported in py
+  * Zarr Ticks all boxes
+  * GRIB (+Kerchunk) (all downsides of netCDF + miserable chunking)
+* Solution: Mostly zarr, bits of GRIB hidden behind server, causing some trouble.
+  * Zarr 2, as zarr 3 support is still not there in libraries other than python, e.g. `libnetcdf`.
+  * Chunks as basic unit
+    * Compression requires read/write of entire chunks
+    * Compromise between file system limits (inode quotas / availablity, IOPS), and desire for small chunks to limit accidental loading.
+    * Known for quite a while, e.g. [2013 Unidata blog entry](https://www.unidata.ucar.edu/blogs/developer/entry/chunking_data_why_it_matters)
+    * Use a compromise between time series and map access
+    * Many processing / analysis tools still think in maps, so weigh a bit in direction of maps.
+* Outlook:
+  * Go to zarr3 to get rid of small files on disk using sharding, once more widely supported
+  * Improve netCDF support for zarr3
+
+:::::: {.callout-note}
+Tobi: 
+
+Well, there are also implementations in C++, JavaScript, OCaml, Rust... and we are using zarrita.js for gridlook, and we couldn't use NetCDF-C for remote access anyways. But still, I guess there was just no good or important enough reason to favour Zarr 3 for the hackathon. Especially when thinking about HTTP-access, Zarr 3 doesn't do a huge difference on top of consolidated Zarr 2 (despite better formalization, which is a good thing on it's own).
+
+
+I would not consider netCDF+Kerchunk as netCDF, because it doesn't use anything related to netCDF for opening the dataset.
+
+Apart form that, there are at least four backends to netCDF which probably have to be accounted for differently with respect to this paper:
+
+netCDF classic (no compression, no chunks, single file)
+OPeNDAP (not a format, but a network protocol to access datasets, imposes a lot of load on the servers)
+HDF5 (chunks, compression, can support multi-file, can be accessed remotely if HTTP-Server supports byte-range requests)
+Zarr (like HDF5, but separates chunking logic from storage logic, which simplifies things and allows for optimization, but Zarr support in netCDF is limited, thus Zarr outside of netCDF)
+:::
+
+### Python environment
+* Requirements
+  * Python stack that can open and do standard analysis on data
+* Market
+  * conda(forge) works, and includes pip support
+  * pip needs a python
+  * pixi is nicer, but less known, conda-(forge) based
+  * uv could also be used
+* Solution: Conda recipe in github with some CI testing
+* Outlook:
+  * Consider pixi
+
+### HPC access
+* Requirements
+  * Nodes with some compute power for data-intensive analyses
+  * User-friendly scripting environment
+  * Nodes with internet access for working with remote datasets
+* Market
+  * JPH has no requirements on user side, bit of hassle to install server
+  * VS Code needs user with VS code, and server that has not completely outdated OS, otherwise easy on server side
+  * Other editors (PyCharm...) can do similar things
+* Solution:
+  * Most nodes JPH
+  * VS Code / ... also used
+* Outlook:
+  * By and large good, proxies would be useful.
+* We've had a quite reasonable experience with the smaller nodes in Japan, and even working on the laptop was not that bad. Of course for huge post-processing tasks, a bit of compute power doesn't hurt.
+
+
+### Communication platform
+* Requirements
+  * Easy accounts for all participants
+  * Intuitive usage
+* Market
+  * Slack / other commercial - usually restricted in free mode
+  * mpi-m mattermost - easy, free for mpi-related projects, sends e-mails in case of mentions.
+ * Outlook
+   * Mattermost worked very well. Matrix might be of interest as alternative.
+
+### Code sharing
+* Requirements
+  * Easy accounts for all participants
+  * Some review process
+* Market
+  * Self-hosted gitlab - works, but a bit messy on the accounts
+  * other cloud providers - most don't have accounts
+* Solution: Github code repo w/ a bit of PR review
+* Outlook
+  * Carefully review situation and options before next hackathon
+  * Train people beforehand
+  * Only allow for %-style notebooks without embedded figures and have CI in place to run the notebooks
+  * Keep tech stack limited
+
+::: {.callout-note}
+
+Tobi:
+
+The biggest issue here is probably to find out what we actually want...
+
+For the hackathon we settled I guess on the [dumpster approach](https://github.com/digital-earths-global-hackathon/hk25-teams/pull/16#issuecomment-2834717278), which arguable wouldn't have to have bothered so much with reviews.
+
+For another iteration, we might want to be more clear about where to (separately)
+
+dump things
+build libraries
+build documentation
+build tutorials
+:::
+
+
+### Custom python packages
+* easygems - basic functions for use of HEALPix in climate context
+  * `healpix_show` for efficient plotting
+  * delauney triangulation for remap
+  * healpix to lat/lon
+* UXArray -> TODO: Orhan
+  * Xarray extension for unstructured grids
+  * Allowed participants to leverage familiar xarray-based analysis tools on HEALPix grid geometries without custom code 
+* XDGGS
+  * Xarray extension for discrete global grids
+  * leverages structure of grid systems for operations more efficient than on unstructured grids
+
+:::::: {.callout-note}
+
+Tobi:
+Ideally, the easygems package should go away in mid-term, but it provided a bunch of helpful tools for the hackathon (which should be incorporated into more mature packages).
+:::
+
+
+### Documentation
+* easy.gems
+  * Curated collection of examples for analysis codes showing access and plot methods, not a collection of analysis scripts
+  * Instructions for creating own scripts for converting data to HEALPix / Zarr
+* pythia -> TODO: Julia Kent?
+
+## Preparation
+
+* Talks on data concept in Fall 2024
+  * Explaining the ideas behind the tech stack to all teams
+  * Slides for several talks were kept available via [hackathon page](https://digital-earths-global-hackathon.github.io/talks/)
+
+* [Explanatory examples](https://easy.gems.dkrz.de/Processing/healpix/index.html) on easy.gems
+* All remap their datasets to HEALPix
+* All convert data to zarr
+* Difficulties
+  * Many runs arrive last-minute
+  * Lack of dedicated staff, so things only happen last-minute
+  * Zoo of formats / variants
+  * Inconsistencies between different datasets, e.g. missing crs information or different chunking decisions
+  * Lack of standardization of the metadata (?)
+
+### Remapping
+* Algorithms
+  * NN - Simple, keeps columns intact for extreme value analysis or analysis of non-linear properties (T - rel hum - spec hum), damages gradient and similar operators
+  * Delaunay Triangulation - keeps gradients intact, damages extreme values / ...
+  * Conservative - assuming great circles as cell edges, should not do much damage at high res.
+* Tools
+  * YAC / on the fly - various algorithms available, including distance weighted, conservative, NN. ICON used NN to one too high grid, and then cons aggregation, needs to be integrated with model prior to running.
+  * CDO - Various, see YAC
+  * Python - Dalaunay and NN expamples provided (?)
+* Challenges for regional data with missing value mask
+
+### Zarr-ification
+* Often as part of remap
+* Rechunking can be hard for GRIB / stupid layouts - IFS was done in two-pass
+* gribscan + eerie.cloud as fallback for IFS, ended up overloaded.
+
+### Hierarchy generation
+* Generally easy
+* Some issues with missing values / regional grids
+
+### Copying data
+* rclone
+* globus
+* difficult with last-minute data-set arrivals
+* Much of data usually not used, so a bit of a waste if data can be cached on-demand
+
+### Catalog building
+* Intake0.7
+* Script that merges catalogs with online catalog
+* Web page with brief descriptions
