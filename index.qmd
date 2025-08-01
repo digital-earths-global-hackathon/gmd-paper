@@ -130,7 +130,7 @@ There's some unit (roughly like a result of one simulation), which we want to ad
     * Use a compromise between time series and map access
     * Many processing / analysis tools still think in maps, so weigh a bit in direction of maps.
 * Outlook:
-  * Go to zarr3 to get rid of small files on disk, once more widely supported
+  * Go to zarr3 to get rid of small files on disk using sharding, once more widely supported
   * Improve netCDF support for zarr3
 
 :::::: {.callout-note}
@@ -156,6 +156,7 @@ Zarr (like HDF5, but separates chunking logic from storage logic, which simplifi
   * conda(forge) works, and includes pip support
   * pip needs a python
   * pixi is nicer, but less known, conda-(forge) based
+  * uv could also be used
 * Solution: Conda recipe in github with some CI testing
 * Outlook:
   * Consider pixi
@@ -168,7 +169,7 @@ Zarr (like HDF5, but separates chunking logic from storage logic, which simplifi
 * Market
   * JPH has no requirements on user side, bit of hassle to install server
   * VS Code needs user with VS code, and server that has not completely outdated OS, otherwise easy on server side
-  * Other editors can do similar things
+  * Other editors (PyCharm...) can do similar things
 * Solution:
   * Most nodes JPH
   * VS Code / ... also used
@@ -256,6 +257,7 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
   * Many runs arrive last-minute
   * Lack of dedicated staff, so things only happen last-minute
   * Zoo of formats / variants
+  * Inconsistencies between different datasets, e.g. missing crs information or different chunking decisions
   * Lack of standardization of the metadata (?)
 
 ### Remapping
