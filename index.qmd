@@ -81,6 +81,8 @@ We present the results and technical achievements of a global, multi-model inter
   * Intake 2.0 does not do the variants, complex format
   * STAC does not do the opening, does not do the variants, does not like more than one file per entry (asset)
 * Solution: Intake 0.7
+  * Manual description of datasets in catalog entries
+  * Automated merging of local and online resources into a sub-catalog per hackathon node via gitlab CI.
 * Outlook
   * Improve STAC
   * Work towards cleaner datasets
