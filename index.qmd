@@ -243,6 +243,11 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
   * Curated collection of examples for analysis codes showing access and plot methods, not a collection of analysis scripts
   * Instructions for creating own scripts for converting data to HEALPix / Zarr
 * pythia -> TODO: Julia Kent?
+* hackathon page(s)
+  * https://digital-earths-global-hackathon.github.io/ - main page created to coordinate the run-up of the hackathon
+  * https://digital-earths-global-hackathon.github.io/hk25/ created for the participants because the main page already contained tech descriptions, and people felt the need for a new page.
+  * Node pages for registration at the nodes
+  * https://github.com/digital-earths-global-hackathon/hk25-teams with sub-readmes for teams with code-sharing attached.
 
 ## Preparation
 
