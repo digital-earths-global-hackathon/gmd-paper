@@ -280,11 +280,17 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
 * Generally easy
 * Some issues with missing values / regional grids
 
-### Copying data
-* rclone
-* globus
-* difficult with last-minute data-set arrivals
-* Much of data usually not used, so a bit of a waste if data can be cached on-demand
+### Data provision across nodes
+* On-line data storage
+  * Object stores at DKRZ, JASMIN
+  * Web servers serving from HPC storage for NICAM (nowake), DKRZ (eerie.cloud)
+  * Need local proxies in future to avoid frequent re-transfer of data between nodes.
+* Copying data
+  * rclone
+  * globus
+  * difficult with last-minute data-set arrivals
+  * Much of data usually not used, so a bit of a waste if data can be cached on-demand
+
 
 ### Catalog building
 * Intake0.7
