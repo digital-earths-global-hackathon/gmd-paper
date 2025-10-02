@@ -81,6 +81,8 @@ We present the results and technical achievements of a global, multi-model inter
   * Intake 2.0 does not do the variants, complex format
   * STAC does not do the opening, does not do the variants, does not like more than one file per entry (asset)
 * Solution: Intake 0.7
+  * Manual description of metadata in catalog entries for each data set
+  * Automated merging of local and online resources into a sub-catalog per hackathon node via gitlab CI.
 * Outlook
   * Improve STAC
   * Work towards cleaner datasets
@@ -294,5 +296,7 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
 
 ### Catalog building
 * Intake0.7
-* Script that merges catalogs with online catalog
+* Manual description of metadata in catalog entries for each data set
+* Script that merges catalogs with online catalog running in github CI
 * Web page with brief descriptions
+* Links to visualization where data available online.
