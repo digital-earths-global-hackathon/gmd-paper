@@ -312,3 +312,12 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
 * Script that merges catalogs with online catalog running in github CI
 * Web page with brief descriptions
 * Links to visualization where data available online.
+
+## Lessons learned
+
+* Overall Success
+  * People pick up new workflows extremely fast if supported
+  * Shared environment worked well, and allowed cooperation across nodes
+  * Pre-copying allowed nodes with limited bandwidth to have data at hand, needs simulations to be finished pre-hackathon
+* Have in-person meeting for tech team prior to hackathon, nothing is as good as actually meeting people
+
