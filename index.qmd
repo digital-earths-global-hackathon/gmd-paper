@@ -68,6 +68,13 @@ We present the results and technical achievements of a global, multi-model inter
 
 ## Tech stack
 
+* Made data easy to analyze with common naming and shared grid with hierarchies.
+* Standard reference datasets on same grid saved repeat workflows
+* Lowering the bar with instructive examples in easy.gems, helper functions in uxarray, easygems, xdggs, and code sharing via github allowed for fast start
+* Combination of shared python environment, common catalogs with local adaptations, and central github repos with examples / code sharing enabled collaboration across nodes.
+* Healpix with hierarchy + Zarr allowed for efficient data access, even from remote systems
+* Communication during hackathon mainly relied on mattermost chat, in run-up the mix of zoom for direct exchange and mattermost for async was helpful, web page for more static info.
+
 ### Catalog
 * Requirements
   * easy to load data
