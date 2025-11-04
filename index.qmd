@@ -304,7 +304,7 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
   * globus
   * difficult with last-minute data-set arrivals
   * Much of data usually not used, so a bit of a waste if data can be cached on-demand
-
+* Aim of max one copy per dataset and node, as DS are big.
 
 ### Catalog building
 * Intake0.7
