@@ -41,6 +41,17 @@ We present the results and technical achievements of a global, multi-model inter
   * factor 20 horizontally yields 400 in data volume per record
   * new workflows necessary
 
+* Hackathons
+  * Rapid software prototyping
+  * started around 2000 ( https://www.openbsd.org/hackathons.html , https://doi.org/10.1080/14778238.2021.1911607, https://doi.org/10.1177/0162243915578486 ) 
+  * original idea was to develop software projects together, usually as weekend-style activity with minimial sleep
+  * Spread in all directions, with civic hacking as wel as corporate hacking events
+  * Gaining traction in climate research as multi-day event where scientists meet and collaborate during normal office hours
+  * Unclear how much of the projects started in hackthons actually survive
+  * km-scale hackathons
+     * nextGEMS, EERIE, ...
+	 * Less about developing one piece of code together than about using the same / similar datasets and methods
+
 * Paradigm shift from classic *downloading* towards *opening* data
   * traditional approach (netCDF / ...) copy data over in explicit file transfers, then access those
   * Network access via Zarr - only what you really need is transferred, and that without your intervention
@@ -51,8 +62,7 @@ We present the results and technical achievements of a global, multi-model inter
   * DYAMOND Summer, Winter
     * Summer: come as you are, no standardization
     * Winter: worked our way through to netCDF, some standardization
-* km-scale hackathons
-  * nextGEMS, EERIE, ...
+
 
 * Global hackathon: 
   * All remapped to HEALPix, 
