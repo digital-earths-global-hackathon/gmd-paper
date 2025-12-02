@@ -49,19 +49,33 @@ We present the results and technical achievements of a global, multi-model inter
   * Gaining traction in climate research as multi-day event where scientists meet and collaborate during normal office hours
   * Unclear how much of the projects started in hackthons actually survive
   * km-scale hackathons
-     * nextGEMS, EERIE, ...
-	 * Less about developing one piece of code together than about using the same / similar datasets and methods
+    * nextGEMS
+      * H2020 project targeting the developing of km-scale models with focus on atmosphere, but also doing ocean and land processes
+      * Started in 2021 with the start of nextGEMS
+      * six hackathons evolved the workflow from native grid and intake-esm to healpix-zarr and intake 0.7
+    * EERIE
+      * H2020, more of an ocean focus, started ...
+      * also did several hackathons
+      * native grid with evolution to kerchunked netCDF/HDF5 for zarr-view
+      * data spread across compute centers, shared catalog
+      * eerie.cloud provides access to DKRZ data for users outside DKRZ
+      * both projects used shared python environments and jph for analysis
+    * Less about developing one piece of code together than about using the same / similar datasets and methods
+    * learning workflows together
+    * Connecting the community
+    * Forming a close link between technical and science teams
 
 * Paradigm shift from classic *downloading* towards *opening* data
   * traditional approach (netCDF / ...) copy data over in explicit file transfers, then access those
   * Network access via Zarr - only what you really need is transferred, and that without your intervention
 * Data sharing as default
-* Common catalog that merges all datasets available online
+* Common catalog that unifies the interface to all datasets
 * previous intercomparisons
   * CMIP
   * DYAMOND Summer, Winter
-    * Summer: come as you are, no standardization
-    * Winter: worked our way through to netCDF, some standardization
+    * Summer: 10.1186/s40645-019-0304-z 40 days of boreal summer, aligned with the NAR-VAL2 tropical field study, protocol: Stevens 2019, come as you are, no standardization
+    * Winter: 40 days of boreal winter, aligned with EUREC4A campaign, co-inciding with Polarstern overwintering; worked our way through to netCDF, some standardization
+    * Year: doi:10.1186/s40645-024-00668-1  All datasets now are healpix/zarr -> same grid, same access.
 
 
 * Global hackathon: 
