@@ -65,10 +65,17 @@ We present the results and technical achievements of a global, multi-model inter
 
 
 * Global hackathon: 
-  * All remapped to HEALPix, 
-  * zarr
-  * Common catalog with online DS as backup in github
-  * Shared environment spec for easy set-up of similar/identical workflow env
+  * Each node is self-organized, but the organizing teams are connected to provide a consistent experience
+    * exchange between the organizational teams in run-up to harmonize things
+    * close collaboration of the technical teams to provide similar datasets
+  * cross-node science teams connecting the nodes
+    * local teams join these
+  * cross-cutting activities that explore techincal capabilities like AI representations of the model output or comparison with the EarthCARE satellite run orthogonal to science teams and link them
+  * Technical setup
+    * All datasets remapped to HEALPix, 
+    * zarr
+    * Common catalog with online DS as backup in github
+    * Shared environment spec for easy set-up of similar/identical workflow env  
 
 ## Tech team
   * Some nodes have dedicated tech staff, sometimes the PIs took the role
