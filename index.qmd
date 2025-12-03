@@ -45,10 +45,16 @@ We present the results and technical achievements of a global, multi-model inter
   * Rapid software prototyping
   * started around 2000 ( https://www.openbsd.org/hackathons.html , https://doi.org/10.1080/14778238.2021.1911607, https://doi.org/10.1177/0162243915578486 ) 
   * original idea was to develop software projects together, usually as weekend-style activity with minimial sleep
-  * Spread in all directions, with civic hacking as wel as corporate hacking events
-  * Gaining traction in climate research as multi-day event where scientists meet and collaborate during normal office hours
-  * Unclear how much of the projects started in hackthons actually survive
-  * km-scale hackathons
+  * Spread in all directions, with civic hacking as well as corporate hacking events
+  * Gaining traction in climate research as multi-day event where scientists meet and collaborate during normal office hours and learn workflows together
+    * Less about developing one piece of code together than about using the same / similar datasets and methods
+    * Connecting the community
+    * Forming a close link between technical and science teams
+  * previouos km-scale hackathons
+    * ESiWACE / DYAMOND Summer Hackathon
+      * At start of km-scale modeling era
+      * Started 2018 with MPI-M/DKRZ internal event, followed by an international event in June 2019 ( https://doi.org/10.5281/zenodo.3342475)
+    * Then came Covid
     * nextGEMS
       * H2020 project targeting the developing of km-scale models with focus on atmosphere, but also doing ocean and land processes
       * Started in 2021 with the start of nextGEMS
@@ -60,10 +66,7 @@ We present the results and technical achievements of a global, multi-model inter
       * data spread across compute centers, shared catalog
       * eerie.cloud provides access to DKRZ data for users outside DKRZ
       * both projects used shared python environments and jph for analysis
-    * Less about developing one piece of code together than about using the same / similar datasets and methods
-    * learning workflows together
-    * Connecting the community
-    * Forming a close link between technical and science teams
+
 
 * Paradigm shift from classic *downloading* towards *opening* data
   * traditional approach (netCDF / ...) copy data over in explicit file transfers, then access those
