@@ -126,13 +126,6 @@ We present the results and technical achievements of a global, multi-model inter
   * Work towards cleaner datasets
   * Maybe adopt `DataTree` or similar structures which allow a single catalog entry to incorporate variants -> this would enable compatibility with Intake 2.0 and STAC (and likely most other tools)
 
-:::::: {.callout-note}
-Tobi:
-We've used variants in the catalog (which I think was the best option for the hackathon due to time constraints), but it might be possible to also have variants after the open call e.g. DataTree. I think the future will go towards someting like that, but the main point remains:
-
-There's some unit (roughly like a result of one simulation), which we want to address through a catalog entry, and there's another (smaller) unit, which forms the biggest reasonable dataset. The differentiation between these units can be called variants and accessing the data works best if we first address the outer unit and then (optionally) select a variant.
-:::
-
 
 ### Grid
 * Requirements
@@ -158,11 +151,11 @@ There's some unit (roughly like a result of one simulation), which we want to ad
   * Chunking in all dimensions
   * Works via network
 * Market
-  * netCDF (+Kerchunk) Can be served as zarr via remote. Needs kerchunk to get fast opening of full DS, that's only supported in py
+  * *netCDF*(HDF5) (+Kerchunk) Can be served as zarr via remote. Needs kerchunk to get fast opening of full DS, that's only supported in py
   * Zarr Ticks all boxes
   * GRIB (+Kerchunk) (all downsides of netCDF + miserable chunking)
 * Solution: Mostly zarr, bits of GRIB hidden behind server, causing some trouble.
-  * Zarr 2, as zarr 3 support is still not there in libraries other than python, e.g. `libnetcdf`.
+  * Zarr 2, as zarr 3 support was still not included in all relevant libraries, e.g. `libnetcdf`.
   * Chunks as basic unit
     * Compression requires read/write of entire chunks
     * Compromise between file system limits (inode quotas / availablity, IOPS), and desire for small chunks to limit accidental loading.
@@ -173,21 +166,6 @@ There's some unit (roughly like a result of one simulation), which we want to ad
   * Go to zarr3 to get rid of small files on disk using sharding, once more widely supported
   * Improve netCDF support for zarr3
 
-:::::: {.callout-note}
-Tobi: 
-
-Well, there are also implementations in C++, JavaScript, OCaml, Rust... and we are using zarrita.js for gridlook, and we couldn't use NetCDF-C for remote access anyways. But still, I guess there was just no good or important enough reason to favour Zarr 3 for the hackathon. Especially when thinking about HTTP-access, Zarr 3 doesn't do a huge difference on top of consolidated Zarr 2 (despite better formalization, which is a good thing on it's own).
-
-
-I would not consider netCDF+Kerchunk as netCDF, because it doesn't use anything related to netCDF for opening the dataset.
-
-Apart form that, there are at least four backends to netCDF which probably have to be accounted for differently with respect to this paper:
-
-netCDF classic (no compression, no chunks, single file)
-OPeNDAP (not a format, but a network protocol to access datasets, imposes a lot of load on the servers)
-HDF5 (chunks, compression, can support multi-file, can be accessed remotely if HTTP-Server supports byte-range requests)
-Zarr (like HDF5, but separates chunking logic from storage logic, which simplifies things and allows for optimization, but Zarr support in netCDF is limited, thus Zarr outside of netCDF)
-:::
 
 ### Python environment
 * Requirements
@@ -242,28 +220,13 @@ Zarr (like HDF5, but separates chunking logic from storage logic, which simplifi
   * Only allow for %-style notebooks without embedded figures and have CI in place to run the notebooks
   * Keep tech stack limited
 
-::: {.callout-note}
-
-Tobi:
-
-The biggest issue here is probably to find out what we actually want...
-
-For the hackathon we settled I guess on the [dumpster approach](https://github.com/digital-earths-global-hackathon/hk25-teams/pull/16#issuecomment-2834717278), which arguable wouldn't have to have bothered so much with reviews.
-
-For another iteration, we might want to be more clear about where to (separately)
-
-dump things
-build libraries
-build documentation
-build tutorials
-:::
-
 
 ### Custom python packages
 * easygems - basic functions for use of HEALPix in climate context
   * `healpix_show` for efficient plotting
   * delauney triangulation for remap
   * healpix to lat/lon
+  * Temporary collection of these functions with the hope of merging them into more mature packages, such as UXArray.
 * UXArray -> TODO: Orhan
   * Xarray extension for unstructured grids
   * Allowed participants to leverage familiar xarray-based analysis tools on HEALPix grid geometries without custom code 
@@ -271,11 +234,7 @@ build tutorials
   * Xarray extension for discrete global grids
   * leverages structure of grid systems for operations more efficient than on unstructured grids
 
-:::::: {.callout-note}
 
-Tobi:
-Ideally, the easygems package should go away in mid-term, but it provided a bunch of helpful tools for the hackathon (which should be incorporated into more mature packages).
-:::
 
 
 ### Documentation
