@@ -41,24 +41,58 @@ We present the results and technical achievements of a global, multi-model inter
   * factor 20 horizontally yields 400 in data volume per record
   * new workflows necessary
 
+* Hackathons
+  * Rapid software prototyping
+  * started around 2000 ( https://www.openbsd.org/hackathons.html , https://doi.org/10.1080/14778238.2021.1911607, https://doi.org/10.1177/0162243915578486 ) 
+  * original idea was to develop software projects together, usually as weekend-style activity with minimial sleep
+  * Spread in all directions, with civic hacking as well as corporate hacking events
+  * Gaining traction in climate research as multi-day event where scientists meet and collaborate during normal office hours and learn workflows together
+    * Less about developing one piece of code together than about using the same / similar datasets and methods
+    * Connecting the community
+    * Forming a close link between technical and science teams
+  * previouos km-scale hackathons
+    * ESiWACE / DYAMOND Summer Hackathon
+      * At start of km-scale modeling era
+      * Started 2018 with MPI-M/DKRZ internal event, followed by an international event in June 2019 ( https://doi.org/10.5281/zenodo.3342475)
+    * Then came Covid
+    * nextGEMS
+      * H2020 project targeting the developing of km-scale models with focus on atmosphere, but also doing ocean and land processes
+      * Started in 2021 with the start of nextGEMS
+      * six hackathons evolved the workflow from native grid and intake-esm to healpix-zarr and intake 0.7
+    * EERIE
+      * H2020, more of an ocean focus, started ...
+      * also did several hackathons
+      * native grid with evolution to kerchunked netCDF/HDF5 for zarr-view
+      * data spread across compute centers, shared catalog
+      * eerie.cloud provides access to DKRZ data for users outside DKRZ
+      * both projects used shared python environments and jph for analysis
+
+
 * Paradigm shift from classic *downloading* towards *opening* data
   * traditional approach (netCDF / ...) copy data over in explicit file transfers, then access those
   * Network access via Zarr - only what you really need is transferred, and that without your intervention
 * Data sharing as default
-* Common catalog that merges all datasets available online
+* Common catalog that unifies the interface to all datasets
 * previous intercomparisons
   * CMIP
   * DYAMOND Summer, Winter
-    * Summer: come as you are, no standardization
-    * Winter: worked our way through to netCDF, some standardization
-* km-scale hackathons
-  * nextGEMS, EERIE, ...
+    * Summer: 10.1186/s40645-019-0304-z 40 days of boreal summer, aligned with the NAR-VAL2 tropical field study, protocol: Stevens 2019, come as you are, no standardization
+    * Winter: 40 days of boreal winter, aligned with EUREC4A campaign, co-inciding with Polarstern overwintering; worked our way through to netCDF, some standardization
+    * Year: doi:10.1186/s40645-024-00668-1  All datasets now are healpix/zarr -> same grid, same access.
+
 
 * Global hackathon: 
-  * All remapped to HEALPix, 
-  * zarr
-  * Common catalog with online DS as backup in github
-  * Shared environment spec for easy set-up of similar/identical workflow env
+  * Each node is self-organized, but the organizing teams are connected to provide a consistent experience
+    * exchange between the organizational teams in run-up to harmonize things
+    * close collaboration of the technical teams to provide similar datasets
+  * cross-node science teams connecting the nodes
+    * local teams join these
+  * cross-cutting activities that explore techincal capabilities like AI representations of the model output or comparison with the EarthCARE satellite run orthogonal to science teams and link them
+  * Technical setup
+    * All datasets remapped to HEALPix, 
+    * zarr
+    * Common catalog with online DS as backup in github
+    * Shared environment spec for easy set-up of similar/identical workflow env  
 
 ## Tech team
   * Some nodes have dedicated tech staff, sometimes the PIs took the role
@@ -67,6 +101,13 @@ We present the results and technical achievements of a global, multi-model inter
   * Most experienced tech staff flew out to other nodes to assist them
 
 ## Tech stack
+
+* Made data easy to analyze with common naming and shared grid with hierarchies.
+* Standard reference datasets on same grid saved repeat workflows
+* Lowering the bar with instructive examples in easy.gems, helper functions in uxarray, easygems, xdggs, and code sharing via github allowed for fast start
+* Combination of shared python environment, common catalogs with local adaptations, and central github repos with examples / code sharing enabled collaboration across nodes.
+* Healpix with hierarchy + Zarr allowed for efficient data access, even from remote systems
+* Communication during hackathon mainly relied on mattermost chat, in run-up the mix of zoom for direct exchange and mattermost for async was helpful, web page for more static info.
 
 ### Catalog
 * Requirements
@@ -87,13 +128,6 @@ We present the results and technical achievements of a global, multi-model inter
   * Improve STAC
   * Work towards cleaner datasets
   * Maybe adopt `DataTree` or similar structures which allow a single catalog entry to incorporate variants -> this would enable compatibility with Intake 2.0 and STAC (and likely most other tools)
-
-:::::: {.callout-note}
-Tobi:
-We've used variants in the catalog (which I think was the best option for the hackathon due to time constraints), but it might be possible to also have variants after the open call e.g. DataTree. I think the future will go towards someting like that, but the main point remains:
-
-There's some unit (roughly like a result of one simulation), which we want to address through a catalog entry, and there's another (smaller) unit, which forms the biggest reasonable dataset. The differentiation between these units can be called variants and accessing the data works best if we first address the outer unit and then (optionally) select a variant.
-:::
 
 
 ### Grid
@@ -120,36 +154,22 @@ There's some unit (roughly like a result of one simulation), which we want to ad
   * Chunking in all dimensions
   * Works via network
 * Market
-  * netCDF (+Kerchunk) Can be served as zarr via remote. Needs kerchunk to get fast opening of full DS, that's only supported in py
+  * *netCDF*(HDF5) (+Kerchunk) Can be served as zarr via remote. Needs kerchunk to get fast opening of full DS, that's only supported in py
   * Zarr Ticks all boxes
   * GRIB (+Kerchunk) (all downsides of netCDF + miserable chunking)
 * Solution: Mostly zarr, bits of GRIB hidden behind server, causing some trouble.
-  * Zarr 2, as zarr 3 support is still not there in libraries other than python, e.g. `libnetcdf`.
+  * Zarr 2, as zarr 3 support was still not included in all relevant libraries, e.g. `libnetcdf`.
   * Chunks as basic unit
     * Compression requires read/write of entire chunks
     * Compromise between file system limits (inode quotas / availablity, IOPS), and desire for small chunks to limit accidental loading.
     * Known for quite a while, e.g. [2013 Unidata blog entry](https://www.unidata.ucar.edu/blogs/developer/entry/chunking_data_why_it_matters)
     * Use a compromise between time series and map access
     * Many processing / analysis tools still think in maps, so weigh a bit in direction of maps.
+    * Zarr 2 had too many files; hard to deal with for filesystems, many HPC have inode quota
 * Outlook:
   * Go to zarr3 to get rid of small files on disk using sharding, once more widely supported
   * Improve netCDF support for zarr3
 
-:::::: {.callout-note}
-Tobi: 
-
-Well, there are also implementations in C++, JavaScript, OCaml, Rust... and we are using zarrita.js for gridlook, and we couldn't use NetCDF-C for remote access anyways. But still, I guess there was just no good or important enough reason to favour Zarr 3 for the hackathon. Especially when thinking about HTTP-access, Zarr 3 doesn't do a huge difference on top of consolidated Zarr 2 (despite better formalization, which is a good thing on it's own).
-
-
-I would not consider netCDF+Kerchunk as netCDF, because it doesn't use anything related to netCDF for opening the dataset.
-
-Apart form that, there are at least four backends to netCDF which probably have to be accounted for differently with respect to this paper:
-
-netCDF classic (no compression, no chunks, single file)
-OPeNDAP (not a format, but a network protocol to access datasets, imposes a lot of load on the servers)
-HDF5 (chunks, compression, can support multi-file, can be accessed remotely if HTTP-Server supports byte-range requests)
-Zarr (like HDF5, but separates chunking logic from storage logic, which simplifies things and allows for optimization, but Zarr support in netCDF is limited, thus Zarr outside of netCDF)
-:::
 
 ### Python environment
 * Requirements
@@ -204,28 +224,13 @@ Zarr (like HDF5, but separates chunking logic from storage logic, which simplifi
   * Only allow for %-style notebooks without embedded figures and have CI in place to run the notebooks
   * Keep tech stack limited
 
-::: {.callout-note}
-
-Tobi:
-
-The biggest issue here is probably to find out what we actually want...
-
-For the hackathon we settled I guess on the [dumpster approach](https://github.com/digital-earths-global-hackathon/hk25-teams/pull/16#issuecomment-2834717278), which arguable wouldn't have to have bothered so much with reviews.
-
-For another iteration, we might want to be more clear about where to (separately)
-
-dump things
-build libraries
-build documentation
-build tutorials
-:::
-
 
 ### Custom python packages
 * easygems - basic functions for use of HEALPix in climate context
   * `healpix_show` for efficient plotting
   * delauney triangulation for remap
   * healpix to lat/lon
+  * Temporary collection of these functions with the hope of merging them into more mature packages, such as UXArray.
 * UXArray -> TODO: Orhan
   * Xarray extension for unstructured grids
   * Allowed participants to leverage familiar xarray-based analysis tools on HEALPix grid geometries without custom code 
@@ -233,11 +238,7 @@ build tutorials
   * Xarray extension for discrete global grids
   * leverages structure of grid systems for operations more efficient than on unstructured grids
 
-:::::: {.callout-note}
 
-Tobi:
-Ideally, the easygems package should go away in mid-term, but it provided a bunch of helpful tools for the hackathon (which should be incorporated into more mature packages).
-:::
 
 
 ### Documentation
@@ -282,6 +283,8 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
 * Often as part of remap
 * Rechunking can be hard for GRIB / stupid layouts - IFS was done in two-pass
 * gribscan + eerie.cloud as fallback for IFS, ended up overloaded.
+* typically the rate limiting steps.
+* Had to be distributed, in many cases to scientific (non-technical) staff, needs more advancing as this was almost as much of a pain as running models.
 
 ### Hierarchy generation
 * Generally easy
@@ -297,7 +300,7 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
   * globus
   * difficult with last-minute data-set arrivals
   * Much of data usually not used, so a bit of a waste if data can be cached on-demand
-
+* Aim of max one copy per dataset and node, as DS are big.
 
 ### Catalog building
 * Intake0.7
@@ -305,3 +308,15 @@ Ideally, the easygems package should go away in mid-term, but it provided a bunc
 * Script that merges catalogs with online catalog running in github CI
 * Web page with brief descriptions
 * Links to visualization where data available online.
+
+## Lessons learned
+
+* Overall Success
+  * People pick up new workflows extremely fast if supported
+  * Shared environment worked well, and allowed cooperation across nodes
+  * Pre-copying allowed nodes with limited bandwidth to have data at hand, needs simulations to be finished pre-hackathon
+* Have in-person meeting for tech team prior to hackathon, nothing is as good as actually meeting people
+* Tech team working closely with science team was very effective
+  * Find and solve key pain points
+  * Iteration and connections meant tech effort focused on key pain points for workflow
+  * lots of prototyping about what would work for scientists before major development.
