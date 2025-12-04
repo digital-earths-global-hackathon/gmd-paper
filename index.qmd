@@ -36,24 +36,13 @@ We present the results and technical achievements of a global, multi-model inter
 
 ## Introduction
 
-* km-scale as a revolution in climate workflows
-  * previously 100km scale, now 5 km scale
-  * factor 20 horizontally yields 400 in data volume per record
-  * new workflows necessary
+Kilometer-scale global modeling is causing a revolution in climate modeling. Finally, models are leaving the *grey zone* where statistical descriptions of clouds inside a grid cell stop being meaningful but clouds and large-scale turbulence are not yet resolved, and start to resolve the large-scale turbulence in atmosphere and ocean. This is why this new model generation is often called *storm resolving* models. The revolution also applies to the amount of data in one horizontal field. Typical CMIP models operate on the scale of 100km, and usually employ some variant of a lat/lon grid, so 360x180=64,800 cells can be considered a standard resolution. In fact, the MPI-ESM High resolution CMIP6 setup contained 384x192 = 73,728 grid cells. In contrast, the 2.5 km resolution (*R2B10*) ICON setup covers Earth with an icosahedron consisting of 20*4**10=83,886,080 grid cells. This factor 1000 in field size with the added complexity of a non-Cartesian (often called *unstructured*) grid poses challenges to established workflows.
 
-* Hackathons
-  * Rapid software prototyping
-  * started around 2000 ( https://www.openbsd.org/hackathons.html , https://doi.org/10.1080/14778238.2021.1911607, https://doi.org/10.1177/0162243915578486 ) 
-  * original idea was to develop software projects together, usually as weekend-style activity with minimial sleep
-  * Spread in all directions, with civic hacking as well as corporate hacking events
-  * Gaining traction in climate research as multi-day event where scientists meet and collaborate during normal office hours and learn workflows together
-    * Less about developing one piece of code together than about using the same / similar datasets and methods
-    * Connecting the community
-    * Forming a close link between technical and science teams
-  * previouos km-scale hackathons
-    * ESiWACE / DYAMOND Summer Hackathon
-      * At start of km-scale modeling era
-      * Started 2018 with MPI-M/DKRZ internal event, followed by an international event in June 2019 ( https://doi.org/10.5281/zenodo.3342475)
+With the advent of km-scale global modeling in the late 2010s came the rise of hackathons in climate modeling. Originating as rapid software prototyping weekend-style activities around 2000 ( https://www.openbsd.org/hackathons.html , https://doi.org/10.1080/14778238.2021.1911607, https://doi.org/10.1177/0162243915578486 ), the idea of gathering for an intensive period of software development spread in all directions, with civic hacking as well as corporate hacking events. The climate data analysis variant typically consists of multi-day events where scientists meet and collaborate during normal office hours and learn workflows together. They tend to revolve less around developing one piece of code together than using the same or similar datasets for analysis. They have started to replace traditional project meetings with presentations of the teams' past achievements with collaborative get-togethers that connect the community across research institutions and form close links between the technical and science teams. Examples of such events are the ESiWACE/DYAMOND hackathon in June 2019 (https://doi.org/10.5281/zenodo.3342475), that accompanied the first DYAMOND intercomparison of global storm-resolving models. After a break in 2020, enforced by the COVID-related restrictions, nextGEMS (https://nextgems-h2020.eu/), an H2020 project aimed at the development of storm-resolving models, started a whole series of hackathons. In these hackathons, that were usually tied to new experiment cycles, we iteratively updated the data handling and workflows to improve the scientists' experience when working with the data.
+
+Major advances in user-friendliness came with the introduction of catalogs for finding the data, the switch to the HEALPix grid, spatiotemporal chunking in the storage, Zarr with the unified view of one big dataset, and the provision of a resolution hierarchy.
+
+
     * Then came Covid
     * nextGEMS
       * H2020 project targeting the developing of km-scale models with focus on atmosphere, but also doing ocean and land processes
