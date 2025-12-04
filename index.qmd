@@ -165,6 +165,7 @@ We present the results and technical achievements of a global, multi-model inter
     * Known for quite a while, e.g. [2013 Unidata blog entry](https://www.unidata.ucar.edu/blogs/developer/entry/chunking_data_why_it_matters)
     * Use a compromise between time series and map access
     * Many processing / analysis tools still think in maps, so weigh a bit in direction of maps.
+    * Zarr 2 had too many files; hard to deal with for filesystems, many HPC have inode quota
 * Outlook:
   * Go to zarr3 to get rid of small files on disk using sharding, once more widely supported
   * Improve netCDF support for zarr3
@@ -282,6 +283,8 @@ We present the results and technical achievements of a global, multi-model inter
 * Often as part of remap
 * Rechunking can be hard for GRIB / stupid layouts - IFS was done in two-pass
 * gribscan + eerie.cloud as fallback for IFS, ended up overloaded.
+* typically the rate limiting steps.
+* Had to be distributed, in many cases to scientific (non-technical) staff, needs more advancing as this was almost as much of a pain as running models.
 
 ### Hierarchy generation
 * Generally easy
@@ -313,4 +316,7 @@ We present the results and technical achievements of a global, multi-model inter
   * Shared environment worked well, and allowed cooperation across nodes
   * Pre-copying allowed nodes with limited bandwidth to have data at hand, needs simulations to be finished pre-hackathon
 * Have in-person meeting for tech team prior to hackathon, nothing is as good as actually meeting people
-
+* Tech team working closely with science team was very effective
+  * Find and solve key pain points
+  * Iteration and connections meant tech effort focused on key pain points for workflow
+  * lots of prototyping about what would work for scientists before major development.
