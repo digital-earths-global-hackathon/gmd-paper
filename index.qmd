@@ -85,26 +85,14 @@ Since the hackathon, the specification for HEALPix grids has been [added](https:
 
 
 ### Data format
-* Requirements
-  * Open big datasets fast
-  * Chunking in all dimensions
-  * Works via network
-* Market
-  * *netCDF*(HDF5) (+Kerchunk) Can be served as zarr via remote. Needs kerchunk to get fast opening of full DS, that's only supported in py
-  * Zarr ticks all boxes
-  * GRIB (+Kerchunk) (all downsides of netCDF + miserable chunking)
-* Solution: Mostly zarr, bits of GRIB hidden behind server, causing some trouble.
-  * Zarr 2, as zarr 3 support was still not included in all relevant libraries, e.g. `libnetcdf`.
-  * Chunks as basic unit
-    * Compression requires read/write of entire chunks
-    * Compromise between file system limits (inode quotas / availability, IOPS), and desire for small chunks to limit accidental loading.
-    * Known for quite a while, e.g. [2013 Unidata blog entry](https://www.unidata.ucar.edu/blogs/developer/entry/chunking_data_why_it_matters)
-    * Use a compromise between time series and map access
-    * Many processing / analysis tools still think in maps, so weigh a bit in direction of maps.
-    * Zarr 2 had too many files; hard to deal with for filesystems, many HPC have inode quota
-* Outlook:
-  * Go to zarr3 to get rid of small files on disk using sharding, once more widely supported
-  * Improve netCDF support for zarr3
+
+The choice of data format was critical for enabling efficient access and analysis of large, high-resolution datasets across distributed nodes. Key requirements included the ability to open large datasets quickly, support for chunking in all dimensions, and reliable performance over network connections. Zarr natively supports all required features and was selected as the primary format for the hackathon. Several other formats were considered.  In principle, HDF5 and netCDF also support multi-file datasets, but as we have never seen this used in real-life, and thus had no prior experience on performance robustness of this approach, we refrained from using this at the scale of the hackathon. When combined with Kerchunk, netCDF can be used as pseudo-Zarr in python, providing the fast loading of full datasets, but this is only supported in Python. As km-scale datasets can grow into the PB-range, even a dataset wit (multi-) GB files would consist of thousands of files, and just opening the full dataset in `xarray` would require opening all of those and then combining the contentents across variables and time. GRIB, even with Kerchunk, has all the limitations of NetCDF and additionally suffers from poor chunking performance. For some of the IFS data we still used this in combination with DKRZ's xpublish-based eerie.cloud server, providing the IFS data as zarr to the outside world. The global GRIB data chunks however led to severe performance penalties for this approach.
+
+The datasets were provided in Zarr version 2, as support for Zarr version 3 was not yet available in all relevant libraries, such as `libnetcdf`. Zarr’s chunk-based storage model offers advantages for both compression and data access, but requires careful balancing between file system constraints (e.g., inode quotas and IOPS) and the desire for small chunks to minimize unnecessary data loading. When chosing the chunk shape, one is faced with a trade-off between optimizing for map-based access and pointwise timeseries (see [Unidata blog, 2013](https://www.unidata.ucar.edu/blogs/developer/entry/chunking_data_why_it_matters)). For the hackathon, chunk sizes were chosen to balance efficient access for both time series and map-based analyses, shifting the focus towards map-based access as we recognized that many processing tools still operate primarily on map data. However, Zarr version 2 can generate a large number of files, which can be challenging for file systems, especially on HPC platforms with inode quotas.
+
+Looking forward, adoption of Zarr version 3 is anticipated, as its sharding capability will significantly reduce the number of files on disk. Improved support for Zarr 3 in NetCDF and other zarr reading libraries will further enhance interoperability and performance for future large-scale climate data analyses. However, the current situation for the US science funding makes it unclear how fast this is to be expected to be available.
+
+
 
 
 ### Python environment
