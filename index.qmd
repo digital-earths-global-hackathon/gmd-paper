@@ -56,9 +56,9 @@ The technical side of the hackathon was made possible by an ad-hoc technical tea
 
 ### The catalog
 
-A central aim of the technical stack was to streamline the analysis and comparison of datasets. For most participants, the [data catalog](https://digital-earths-global-hackathon.github.io/catalog/) served as the primary entry point. Key requirements for the catalog included ease of data loading at any node, support for dataset variants (e.g., different spatial and temporal aggregations), and the ability to handle multi-file datasets, as not all data had been consolidated into single Zarr stores for each aggregation due to time constraints. The catalog also needed to be straightforward to create and update.
+A central objective of the technical stack was to streamline the analysis and comparison of datasets. For most participants, the [data catalog](https://digital-earths-global-hackathon.github.io/catalog/) served as the primary entry point. Key requirements for the catalog included ease of data loading at any node, support for dataset variants (such as different spatial and temporal aggregations), and the ability to handle multi-file datasets, as not all data had been consolidated into single Zarr stores for each aggregation due to time constraints. The catalog also needed to be straightforward to create and maintain.
 
-The main options considered for the catalog were Intake and STAC. While STAC has become the de facto standard for satellite and other observational data, it currently lacks convenient support for dataset variants and for loading multi-file datasets as a single object. Intake exists in two major versions: Intake 2.0, which allows for describing dataset transformations during loading but has a complex description language and lacks support for dataset variants; and Intake 0.7, which supports dataset variants and multi-file datasets but is technically incompatible with Intake 2.0. For this hackathon, Intake 0.7 was chosen due to its robust support for variants and multi-file datasets. This enabled participants to obtain an xarray dataset with a simple three-line Python script:
+The main options considered for the catalog were Intake and STAC. While STAC has become the de facto standard for satellite and other observational data, it currently lacks convenient support for dataset variants and for loading multi-file datasets as a single object. Intake exists in two major versions: Intake 2.0, which allows for describing dataset transformations during loading but has a complex description language and lacks support for dataset variants; and Intake 0.7, which supports dataset variants and multi-file datasets but is technically incompatible with Intake 2.0. For this hackathon, Intake 0.7 was selected due to its robust support for variants and multi-file datasets. This enabled participants to obtain an xarray dataset with a simple three-line Python script:
 
 ```python
 import intake
@@ -66,32 +66,23 @@ cat = intake.open_catalog("https://digital-earths-global-hackathon.github.io/cat
 ds = cat["icon_d3hp003"](zoom=7).to_dask()
 ```
 
-The catalog was maintained via [a GitHub repository](https://github.com/digital-earths-global-hackathon/catalog/). Catalog entries, written in simple YAML, were created by adapting pre-existing entries from the nextGEMS and EERIE catalogs to the file structures of the new datasets. These entries were then merged into a coherent catalog by [a Python script](https://github.com/digital-earths-global-hackathon/catalog/blob/main/scripts/combine_catalogs.py) running in the GitHub CI. A [second script](https://github.com/digital-earths-global-hackathon/catalog/blob/main/scripts/render_catalog.py) generated a human-readable catalog start page from the descriptions contained in the catalog entries.
+The catalog was maintained via [a GitHub repository](https://github.com/digital-earths-global-hackathon/catalog/). Catalog entries, written in YAML, were adapted from pre-existing entries in the nextGEMS and EERIE catalogs to match the properties of the new datasets. These entries were then merged into a coherent catalog by [a Python script](https://github.com/digital-earths-global-hackathon/catalog/blob/main/scripts/combine_catalogs.py) running in GitHub CI. A [second script](https://github.com/digital-earths-global-hackathon/catalog/blob/main/scripts/render_catalog.py) generated a human-readable catalog start page from the descriptions contained in the catalog entries.
 
-
-* Outlook
-  * Improve STAC
-  * Work towards cleaner datasets
-  * Maybe adopt `DataTree` or similar structures which allow a single catalog entry to incorporate variants -> this would enable compatibility with Intake 2.0 and STAC (and likely most other tools)
+For future hackathons, a transition towards STAC would likely be advantageous. The requirement for cleaner datasets should be achievable as workflows improve with experience. One possible solution for managing dataset variants is to store the different variants in separate Zarr groups within a single dataset. 
 
 
 ### Grid
-* Requirements
-  * Spatially coherent storage
-  * Hierarchies
-  * Easy access
-  * Equal Area
 
-* Market
-  * Lat/Lon (not equal area, 50% data overhead compared to equal area for same res at eq)
-  * ICON / ... usually no direct computations between lat/lon and index
-  * Gaussian reduced no SFC
-  * HEALPix ticks all boxes.
-* Solution: HEALPix, regional grids by storing indices with the data for active chunks, and filling grid cells with NaN around data
-* Outlook
-  * Fix data format specification (e.g. CF) to allow tools to grow
-  * Improve support for differential operators / ...
-  * General tooling
+High-resolution climate models employ a variety of computational grids, which complicates direct comparison between model outputs. To facilitate intercomparison during the global hackathon, all data were remapped to a common grid. The chosen grid needed to support efficient data access and storage, which translated into requirements for hierarchical structure, spatially coherent storage, direct conversion between geographic coordinates and cell indices, and equal-area cells to avoid over- or undersampling.
+
+While latitude/longitude grids offer intuitive access and spatial chunking, they suffer from significant oversampling near the poles, resulting in up to 50% more data storage compared to an equal-area grid with the same equatorial resolution. Additionally, most non-latitude/longitude grids lack space-filling curve cell ordering or direct computational relationships between geographic coordinates and model cell indices, making efficient subsetting challenging.
+
+Recently, the HEALPix grid (Górski et al., 2005) has gained traction in the geoscience community. Originally developed for astronomy, HEALPix has proven effective for representing climate model output in projects such as nextGEMS and DestinE. HEALPix decomposes the sphere into 12 equal-area diamond cells, which are recursively subdivided to create a hierarchy of grids with 12 × 4ⁿ cells. This structure supports nested cell ordering for spatially coherent data storage and provides direct computations for converting between geographic coordinates and cell indices.
+
+For the hackathon, the HEALPix grid was selected as the common target for remapping. For global models, this choice is straightforward; for regional models, areas outside the model domain were filled with NaN values. Zarr’s compressed storage efficiently handles these NaN regions, as standard compression algorithms reduce their storage footprint to nearly zero, and Zarr can skip writing chunks that contain only NaNs.
+
+Since the hackathon, the specification for HEALPix grids has been [added](https://github.com/cf-convention/cf-conventions/pull/605) to the CF conventions in version [1.13](https://github.com/cf-convention/cf-conventions/releases/tag/v1.13.0), enabling data providers and tools to adopt a standardized approach for describing and interpreting HEALPix data. Further tooling support, including for differential operators, is anticipated as HEALPix continues to gain adoption within the climate modeling community.
+
 
 ### Data format
 * Requirements
