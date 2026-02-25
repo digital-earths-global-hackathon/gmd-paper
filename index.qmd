@@ -92,111 +92,77 @@ The datasets were provided in Zarr version 2, as support for Zarr version 3 was 
 
 Looking forward, adoption of Zarr version 3 is anticipated, as its sharding capability will significantly reduce the number of files on disk. Improved support for Zarr 3 in NetCDF and other zarr reading libraries will further enhance interoperability and performance for future large-scale climate data analyses. However, the current situation for the US science funding makes it unclear how fast this is to be expected to be available.
 
+### Documentation
+
+To document the planning and the workflows for the hackathon we created and used a set of web-pages. https://digital-earths-global-hackathon.github.io was the main page created in the planning of the hackathon, and contained information for the hosting teams. The information for the particpants was collected in a separate site reachable via https://digital-earths-global-hackathon.github.io/hk25 . Each node created its own registration and local planning pages. Finally a GitHub repository at https://github.com/digital-earths-global-hackathon/hk25-teams contained readme files for the topical teams that went beyond the information provided via https://digital-earths-global-hackathon.github.io/hk25.
+
+For the data processing, we pointed the participants to [project pythia](https://projectpythia.org), *the education working group for Pangeo*, and [easy.gems](https://easy.gems.dkrz.de), a collection of examples for analysis codes showing access and plot methods, and instructions for creating own scripts for converting data to HEALPix / Zarr run by MPI-M and DKRZ.
 
 
+### Python environment 
 
-### Python environment
-* Requirements
-  * Python stack that can open and do standard analysis on data
-* Market
-  * conda(forge) works, and includes pip support
-  * pip needs a python
-  * pixi is nicer, but less known, conda-(forge) based
-  * uv could also be used
-* Solution: Conda recipe in github with some CI testing
-* Outlook:
-  * Consider pixi
+To facilitate seamless collaboration across distributed nodes, we established a standardized Python software stack capable of accessing all datasets in the catalog and performing standard analysis tasks.
+
+The primary options for Python package management consist of the conda-forge ecosystem and the Python Package Index (PyPI). Each system contains packages unavailable in the other, necessitating a hybrid approach. We selected conda-forge as the primary package manager due to its compatibility with additional PyPI packages via `pip` installation. Mamba was recommended as the package installer due to its established reliability and performance advantages over the standard conda installer. The environment specification was maintained via GitHub, with automated daily testing of package installation, data access functionality, and basic plotting capabilities using GitHub Actions. This continuous integration approach enabled rapid detection of compatibility issues arising from package updates while maintaining currency with the evolving ecosystem.
+
+For future hackathons, [`pixi`](https://pixi.prefix.dev/) represents a promising alternative installer for conda-forge environments, offering significant performance improvements. Similarly, [uv](https://docs.astral.sh/uv/) would be well-suited for PyPI-only environments due to its exceptional installation speed.
+
 
 ### HPC access
-* Requirements
-  * Nodes with some compute power for data-intensive analyses
-  * User-friendly scripting environment
-  * Nodes with internet access for working with remote datasets
-* Market
-  * JPH has no requirements on user side, bit of hassle to install server
-  * VS Code needs user with VS code, and server that has not completely outdated OS, otherwise easy on server side
-  * Other editors (PyCharm...) can do similar things
-* Solution:
-  * Most nodes JPH
-  * VS Code / ... also used
-* Outlook:
-  * By and large good, proxies would be useful.
-* We've had a quite reasonable experience with the smaller nodes in Japan, and even working on the laptop was not that bad. Of course for huge post-processing tasks, a bit of compute power doesn't hurt.
 
+The computational infrastructure requirements for data analysis encompassed three primary considerations: sufficient memory resources for large dataset processing, internet connectivity for remote data access, and user-friendly scripting environments.
+
+Most participating sites deployed their Python environments alongside JupyterHub installations, providing browser-based access to HPC resources. Integration with HPC schedulers such as SLURM enabled efficient user distribution across compute nodes while maintaining process isolation to prevent resource contention between concurrent analyses. Alternative approaches included remote-capable editors such as Visual Studio Code combined with SLURM job submission for Python script execution.
+Experience at DKRZ indicates that hackathons supporting approximately 100 participants require dedicated allocation of 10 high-memory nodes (512 GB RAM each) for interactive analysis workloads.
+
+Given the commonality of data subsets analyzed by multiple users, implementation of a reverse proxy for caching remote data access would likely provide substantial performance benefits. However, establishing such infrastructure for multi-terabyte datasets with 50 MB chunk sizes presents non-trivial technical challenges, and was not implemented for this hackathon. This capability should be prioritized for future iterations.
+
+Computational requirements vary significantly based on research objectives and participant technical proficiency. Effective utilization of the resolution hierarchy, appropriate chunking strategies, and intermediate result caching enable many analyses to execute on modest hardware platforms, including standard laptops. Training programs and technical consulting can substantially reduce resource requirements in many cases. However, some analyses necessitate processing of complete high-resolution datasets, requiring dedicated HPC infrastructure.
 
 ### Communication platform
-* Requirements
-  * Easy accounts for all participants
-  * Intuitive usage
-* Market
-  * Slack / other commercial - usually restricted in free mode
-  * mpi-m mattermost - easy, free for mpi-related projects, sends e-mails in case of mentions.
- * Outlook
-   * Mattermost worked very well. Matrix might be of interest as alternative.
+
+Effective communication infrastructure was essential for both preparation phases and hackathon execution, requiring a platform supporting universal account creation and intuitive operation. While commercial solutions such as Slack impose limitations on free-tier usage, MPI-M's self-hosted Mattermost installation provided an established solution already deployed across multiple European projects, eliminating setup and maintenance overhead. Mattermost offers comparable functionality to commercial alternatives while providing institutional control over data and user management. A critical feature of this installation is automated email notification for user mentions, ensuring message delivery to participants who do not actively monitor the platform, maintaining engagement throughout extended collaboration periods.
+
+Equivalent functionality could be achieved through alternative self-hosted solutions, with Matrix offering additional federation capabilities. The selection was primarily driven by operational convenience among functionally equivalent options.
+
 
 ### Code sharing
-* Requirements
-  * Easy accounts for all participants
-  * Some review process
-* Market
-  * Self-hosted gitlab - works, but a bit messy on the accounts
-  * other cloud providers - most don't have accounts
-* Solution: Github code repo w/ a bit of PR review
-* Outlook
-  * Carefully review situation and options before next hackathon
-  * Train people beforehand
-  * Only allow for %-style notebooks without embedded figures and have CI in place to run the notebooks
-  * Keep tech stack limited
 
+The code sharing infrastructure aimed to facilitate cross-site collaboration by enabling scientists to share analysis implementations for application to different datasets, while establishing a persistent repository of analysis methods for post-hackathon utilization. Key requirements included accessible account management for all participants and structured review processes for quality control.
 
-### Custom python packages
-* easygems - basic functions for use of HEALPix in climate context
-  * `healpix_show` for efficient plotting
-  * Delaunay triangulation for remap
-  * healpix to lat/lon
-  * Temporary collection of these functions with the hope of merging them into more mature packages, such as UXArray.
-* UXArray -> TODO: Orhan
-  * Xarray extension for unstructured grids
-  * Allowed participants to leverage familiar xarray-based analysis tools on HEALPix grid geometries without custom code 
-* XDGGS
-  * Xarray extension for discrete global grids
-  * Leverages structure of grid systems for operations more efficient than on unstructured grids
+GitHub was selected over self-hosted GitLab or alternative providers due to widespread existing account ownership among participants and straightforward account creation procedures. A centralized repository was established with mandatory pull request reviews for main branch contributions, balancing minimal participant burden with essential quality assurance and error detection capabilities. However, post-hackathon evaluation identified code sharing as a significant challenge requiring enhanced approaches for future events.
 
+A primary technical issue involved Jupyter notebook file size inflation due to embedded plot outputs. This could potentially be addressed by standardizing on percent-format notebooks (plain Python files with `# %%` cell delimiters) combined with continuous integration systems executing notebooks against online datasets. However, such automation would require notebooks to operate within constrained computational resources and might encounter compatibility issues with specialized analysis packages.
 
+Overall effectiveness could be improved through pre-hackathon training programs covering version control systems, collaborative development practices, and efficient analysis techniques. However, such initiatives would require significant resource allocation and planning commitment in preparation phases.
 
+### Custom Python packages
 
-### Documentation
-* easy.gems
-  * Curated collection of examples for analysis codes showing access and plot methods, not a collection of analysis scripts
-  * Instructions for creating own scripts for converting data to HEALPix / Zarr
-* pythia -> TODO: Julia Kent?
-* hackathon page(s)
-  * https://digital-earths-global-hackathon.github.io/ - main page created to coordinate the run-up of the hackathon
-  * https://digital-earths-global-hackathon.github.io/hk25/ created for the participants as a forward facing page and main entry point with key information and links
-  * Node pages for registration at the nodes
-  * https://github.com/digital-earths-global-hackathon/hk25-teams with sub-readmes for teams with code-sharing attached.
+To optimize analysis performance on the HEALPix grid, several specialized Python packages were developed and deployed. These tools build upon established foundational libraries: [`healpix`](https://github.com/ntessore/healpix) and [`healpy`](https://healpy.readthedocs.io/en/latest/), which provide core HEALPix grid functionality. The choice between these libraries involves licensing considerations, with `healpy` distributed under the GPL license while `healpix` employs the more permissive BSD 3-clause license.
+
+The [`easygems`](https://github.com/mpimet/easygems) package provides lightweight utility functions optimized for hackathon workflows, including the `healpix_show` function for rapid visualization of high-resolution HEALPix data as demonstrated on the [easy.gems](https://easy.gems.dkrz.de) documentation portal. Additional functionality includes optimized routines for data transformation to and from HEALPix representations.
+
+[XDGGS](https://github.com/xarray-contrib/xdggs) extends the xarray ecosystem with specialized functionality for Discrete Global Grid Systems (DGGS), including HEALPix. By focusing on the subset of unstructured grids with inherent spatial structure, XDGGS achieves superior computational efficiency compared to generic unstructured grid approaches.
+
+[UXarray](https://uxarray.readthedocs.io/) adopts a comprehensive approach to unstructured grid support, providing generalized functionality for diverse grid types including specialized readers for HEALPix and other structured variants.
+
 
 ## Preparation
 
-* Talks on data concept in Fall 2024
-  * Explaining the ideas behind the tech stack to all teams
-  * Slides for several talks were kept available via [hackathon page](https://digital-earths-global-hackathon.github.io/talks/)
+Preparatory activities for the hackathon commenced in late 2023 with initial concept development and team identification. Throughout 2024, the fundamental framework was disseminated to prospective participants and institutional nodes were established. Formal technical preparations began in Fall 2024 with a two-day virtual workshop featuring presentations on core technical concepts and implementation strategies. Presentation materials were archived on the [hackathon website](https://digital-earths-global-hackathon.github.io/talks/) with recordings distributed to participating teams for reference.
 
-* [Explanatory examples](https://easy.gems.dkrz.de/Processing/healpix/index.html) on easy.gems
-* All remap their datasets to HEALPix
-* All convert data to zarr
-* Difficulties
-  * Many runs arrive last-minute
-  * Lack of dedicated staff, so things only happen last-minute
-  * Zoo of formats / variants
-  * Inconsistencies between different datasets, e.g. missing CRS information or different chunking decisions
-  * Lack of standardization of the metadata (?)
+The data specification was collaboratively developed through a shared GitHub repository integrated with the hackathon documentation system. This specification underwent iterative refinement through community discussion to achieve an optimal balance between dataset comprehensiveness and manageable data volumes.
+
+To facilitate seamless intercomparison, all datasets required standardization to HEALPix grid format and Zarr storage, necessitating substantial preprocessing efforts. Among participating models, only ICON and IFS possess native HEALPix output capability; all other model outputs required grid transformation. Additionally, with the exception of ICON, no models produced Zarr-format outputs, requiring format conversion for all datasets. [Technical documentation](https://easy.gems.dkrz.de/Processing/healpix/index.html) detailing conversion procedures was provided through the easy.gems platform. The combination of late-arriving simulation outputs and limited dedicated technical personnel at some nodes created significant challenges in completing multi-terabyte dataset conversions within hackathon timelines. In several cases, the data preprocessing effort exceeded the effort involved in the original model simulations using established workflows. The heterogeneous nature of model output formats precluded development of universal conversion tools, requiring dataset-specific processing approaches. Integration of pre-existing simulation data introduced additional complexity, as perfect harmonization of output variables and temporal frequencies across all models was not achievable, though efforts were made to maximize dataset coherence.
 
 ### Remapping
-* Algorithms
-  * NN - Simple, keeps columns intact for extreme value analysis or analysis of non-linear properties (T - rel hum - spec hum), damages gradient and similar operators
-  * Delaunay Triangulation - keeps gradients intact, damages extreme values / ...
-  * Conservative - assuming great circles as cell edges, should not do much damage at high res.
+
+Multiple remapping approaches were available for transforming native model grids to the target HEALPix configuration, with modeling teams selecting methods based on their specific requirements and technical constraints. Nearest-neighbor remapping represents the most straightforward approach, typically implemented using K-D tree algorithms. This method preserves non-linear relationships between variables by directly transferring values from native grid points, though prior vertical interpolation to pressure levels may have already compromised such relationships. The primary limitation of nearest-neighbor remapping is spatial displacement of data points, which degrades gradient calculations and related differential operators. 
+
+Delaunay triangulation-based interpolation provides an alternative approach that maintains spatial gradients through linear interpolation between native grid vertices. However, this method tends to smooth extreme values and may compromise non-linear variable relationships. Conservative remapping offers the advantage of preserving area-averaged quantities but similarly introduces smoothing effects, particularly when transitioning from higher to lower spatial resolution.
+
+In the HEALPix context, standard interpolation algorithms assume great circle boundaries for grid cells, introducing theoretical geometric errors. However, at the 10 km spatial scales characteristic of this study, such approximation errors remain practically negligible. Following remapping to the finest HEALPix resolution level, coarser resolution levels were generated through hierarchical averaging of four spatially adjacent cells (consecutive in the nested ordering scheme) into single coarser-level cells. For datasets containing missing values, appropriate weighting based on valid data fractions was implemented to maintain conservation properties throughout the resolution hierarchy.
+
 * Tools
   * YAC / on the fly - various algorithms available, including distance weighted, conservative, NN. ICON used NN to one too high grid, and then cons aggregation, needs to be integrated with model prior to running.
   * CDO - Various, see YAC
@@ -244,3 +210,6 @@ Looking forward, adoption of Zarr version 3 is anticipated, as its sharding capa
   * Find and solve key pain points
   * Iteration and connections meant tech effort focused on key pain points for workflow
   * Lots of prototyping about what would work for scientists before major development.
+
+
+Language barrier
