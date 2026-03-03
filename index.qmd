@@ -159,57 +159,38 @@ To facilitate seamless intercomparison, all datasets required standardization to
 
 Multiple remapping approaches were available for transforming native model grids to the target HEALPix configuration, with modeling teams selecting methods based on their specific requirements and technical constraints. Nearest-neighbor remapping represents the most straightforward approach, typically implemented using K-D tree algorithms. This method preserves non-linear relationships between variables by directly transferring values from native grid points, though prior vertical interpolation to pressure levels may have already compromised such relationships. The primary limitation of nearest-neighbor remapping is spatial displacement of data points, which degrades gradient calculations and related differential operators. 
 
-Delaunay triangulation-based interpolation provides an alternative approach that maintains spatial gradients through linear interpolation between native grid vertices. However, this method tends to smooth extreme values and may compromise non-linear variable relationships. Conservative remapping offers the advantage of preserving area-averaged quantities but similarly introduces smoothing effects, particularly when transitioning from higher to lower spatial resolution.
+Delaunay triangulation-based interpolation offers an alternative that better maintains spatial gradients through linear interpolation between native grid vertices. However, this approach tends to smooth extreme values and may compromise non-linear variable relationships. Conservative remapping preserves area-averaged quantities but similarly introduces smoothing effects.
 
-In the HEALPix context, standard interpolation algorithms assume great circle boundaries for grid cells, introducing theoretical geometric errors. However, at the 10 km spatial scales characteristic of this study, such approximation errors remain practically negligible. Following remapping to the finest HEALPix resolution level, coarser resolution levels were generated through hierarchical averaging of four spatially adjacent cells (consecutive in the nested ordering scheme) into single coarser-level cells. For datasets containing missing values, appropriate weighting based on valid data fractions was implemented to maintain conservation properties throughout the resolution hierarchy.
+Within the HEALPix framework, standard interpolation algorithms assume great circle boundaries for grid cells, introducing theoretical geometric errors. However, at the 10 km spatial scales characteristic of this study, such approximation errors remain practically negligible. Following remapping to the finest HEALPix resolution level, coarser resolution levels were generated through hierarchical averaging. Four spatially adjacent cells (consecutive in the nested ordering scheme) were combined into single coarser-level cells. For datasets containing missing values, appropriate weighting based on valid data fractions was implemented to maintain conservation properties throughout the resolution hierarchy.
 
-* Tools
-  * YAC / on the fly - various algorithms available, including distance weighted, conservative, NN. ICON used NN to one too high grid, and then cons aggregation, needs to be integrated with model prior to running.
-  * CDO - Various, see YAC
-  * Python - Delaunay and NN examples provided (?)
-* Challenges for regional data with missing value mask
+Several established tools support these remapping operations. The ICON model employs its YAC coupler to remap from native icosahedral grids to HEALPix through the hiopy output server. YAC's remapping algorithms are also accessible via the Climate Data Operators (CDO) suite. Nearest-neighbor interpolation and Delaunay triangulation implementations are readily available in Python and documented through the easy.gems platform.
 
-### Zarr-ification
-* Often as part of remap
-* Rechunking can be hard for GRIB / stupid layouts - IFS was done in two-pass
-* gribscan + eerie.cloud as fallback for IFS, ended up overloaded.
-* Typically the rate limiting steps.
-* Had to be distributed, in many cases to scientific (non-technical) staff, needs more advancing as this was almost as much of a pain as running models.
+Regional model grids present additional challenges due to their limited spatial coverage. The adopted solution defines areas outside the model domain as NaN values. Zarr's compression efficiently handles these regions since chunks consisting purely of NaN values need not be written to disk, and mixed chunks benefit from compression of consecutive identical entries. Horizontal data chunking remains advisable to avoid loading NaN regions into memory. An alternative approach stores only non-NaN grid cells alongside their HEALPix indices as an index vector, enabling Python syntax such as `dataset.sel(cell=12345)` to access specific HEALPix cells. This approach integrates with the nearest-neighbor interpolation functionality in `easygems.healpix_show`.
 
-### Hierarchy generation
-* Generally easy
-* Some issues with missing values / regional grids
+### Data format conversion
 
-### Data provision across nodes
-* On-line data storage
-  * Object stores at DKRZ, JASMIN
-  * Web servers serving from HPC storage for NICAM (nowake), DKRZ (eerie.cloud)
-  * Need local proxies in future to avoid frequent re-transfer of data between nodes.
-* Copying data
-  * rclone
-  * globus
-  * Difficult with last-minute data-set arrivals
-  * Much of data usually not used, so a bit of a waste if data can be cached on-demand
-* Aim of max one copy per dataset and node, as DS are big.
+Dataset conversion to Zarr format was typically integrated with the remapping workflow. While most remapping approaches operate optimally on complete 2D fields, efficient access to both time series and spatial maps requires multidimensional chunks spanning all dataset dimensions, targeting sizes of a few megabytes.
 
-### Catalog building
-* Intake0.7
-* Manual description of metadata in catalog entries for each data set
-* Script that merges catalogs with online catalog running in github CI
-* Web page with brief descriptions
-* Links to visualization where data available online.
+This chunking strategy introduces computational challenges, as large 4D data cubes must be maintained in memory for efficient reorganization. For the IFS 2.8 km simulation, global GRIB fields were initially divided into smaller regional chunks and written to intermediate storage before final assembly into multidimensional chunks. This approach proved more efficient than direct processing, even on supercomputer nodes with 1 TB of main memory.
 
-## Lessons learned
+Some IFS datasets were retained in their original format and accessed through Kerchunk indexing, providing virtual Zarr access via Python libraries or DKRZ's xpublish-based eerie.cloud server. However, the global extent of GRIB data chunks resulted in significant performance penalties for remote access patterns.
 
-* Overall Success
-  * People pick up new workflows extremely fast if supported
-  * Shared environment worked well, and allowed cooperation across nodes
-  * Pre-copying allowed nodes with limited bandwidth to have data at hand, needs simulations to be finished pre-hackathon
-* Have in-person meeting for tech team prior to hackathon, nothing is as good as actually meeting people
-* Tech team working closely with science team was very effective
-  * Find and solve key pain points
-  * Iteration and connections meant tech effort focused on key pain points for workflow
-  * Lots of prototyping about what would work for scientists before major development.
+### Data distribution and access
 
+The majority of datasets were made available as online-accessible Zarr stores distributed across multiple institutions. DKRZ and JASMIN provided datasets through their object storage systems, while the NICAM team operated a dedicated web server. DKRZ additionally served IFS datasets via their eerie.cloud infrastructure.
 
-Language barrier
+Given the high frequency of common data subset analysis by multiple users, implementing reverse proxy caching at hackathon sites would likely yield substantial performance improvements. However, establishing such infrastructure for multi-terabyte datasets with 50 MB chunk sizes presents significant technical challenges and was not implemented for this event. This capability should be prioritized in future iterations.
+
+Pre-hackathon data replication across nodes helped minimize transfer requirements during the event. The rclone utility proved effective for copying data from object stores and web servers, while NERSC provided datasets through the Globus file transfer system. The replication approach faces limitations when datasets arrive close to the hackathon deadline, as frequently occurs with dedicated simulations. Additionally, complete dataset replication requires substantial local storage resources and may include variables unnecessary for specific user communities. Consequently, selective replication through caching seems preferable for high-resolution dataset variants.
+
+### Data catalog development
+
+Effective data discovery required a comprehensive catalog system accessible to users across all participating nodes. The catalog needed to support dataset variants (different spatial and temporal aggregations), multi-file datasets, and straightforward maintenance procedures.
+
+Two primary catalog standards were evaluated: SpatioTemporal Asset Catalogs (STAC) and Intake. While STAC has emerged as the standard for satellite and observational data, its design emphasizes cataloging numerous individual objects with explicit geometries, reflecting its origins in satellite imagery. This architecture suits datasets with millions of discrete assets but less effectively serves climate model outputs, which typically comprise unified global datasets available at multiple resolutions where spatiotemporal metadata is less critical.
+
+Intake version 0.7 was selected for its robust support of parameterized datasets, enabling syntax such as `icon_d3hp003(zoom=7, time="PT1H", time_method="mean")` to specify dataset variants. This approach clearly separates the model realization (`icon_d3hp003`) from spatiotemporal aggregation parameters. Intake 0.7 also supports multi-file dataset definitions, reducing preprocessing requirements during data preparation phases.
+
+The catalog was maintained through a GitHub repository with YAML-based dataset descriptions, largely adapted from existing nextGEMS and EERIE catalog entries. A Python script executed via GitHub CI combined individual entries into a [unified catalog](https://digital-earths-global-hackathon.github.io/catalog/catalog.yaml), while a second script generated a [human-readable landing page](https://digital-earths-global-hackathon.github.io/catalog) from embedded descriptions. For online datasets, links to [a JavaScript-based web viewer](https://gridlook.pages.dev/) enabled interactive data inspection.
+
+Catalog generation followed a two-stage process: individual datasets were described in hand-authored YAML files (manageable for the 44 datasets involved), then Python scripts generated site-specific catalog variants combining locally available datasets with online resources. Local dataset preference in this process reduced network traffic while maintaining comprehensive data access.
