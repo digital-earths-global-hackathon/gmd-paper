@@ -115,8 +115,6 @@ The computational infrastructure requirements for data analysis encompassed thre
 Most participating sites deployed their Python environments alongside JupyterHub installations, providing browser-based access to HPC resources. Integration with HPC schedulers such as SLURM enabled efficient user distribution across compute nodes while maintaining process isolation to prevent resource contention between concurrent analyses. Alternative approaches included remote-capable editors such as Visual Studio Code combined with SLURM job submission for Python script execution.
 Experience at DKRZ indicates that hackathons supporting approximately 100 participants require dedicated allocation of 10 high-memory nodes (512 GB RAM each) for interactive analysis workloads.
 
-Given the commonality of data subsets analyzed by multiple users, implementation of a reverse proxy for caching remote data access would likely provide substantial performance benefits. However, establishing such infrastructure for multi-terabyte datasets with 50 MB chunk sizes presents non-trivial technical challenges, and was not implemented for this hackathon. This capability should be prioritized for future iterations.
-
 Computational requirements vary significantly based on research objectives and participant technical proficiency. Effective utilization of the resolution hierarchy, appropriate chunking strategies, and intermediate result caching enable many analyses to execute on modest hardware platforms, including standard laptops. Training programs and technical consulting can substantially reduce resource requirements in many cases. However, some analyses necessitate processing of complete high-resolution datasets, requiring dedicated HPC infrastructure.
 
 ### Communication platform
