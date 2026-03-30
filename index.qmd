@@ -1,38 +1,55 @@
 ---
-title: "km scales hacked at global scale"
+title: "Kilometer-scale climate data analysis at global scale: Technical infrastructure for a distributed multi-model hackathon"
+running-title: "Global hackathon technical infrastructure"
+running-author: "Ziemen et al."
 author:
   - name: Florian Ziemen
+    email: ziemen@dkrz.de
+    affiliations:
+      - ref: dkrz
   - name: Lukas Kluft
+    affiliations:
+      - ref: mpi-m
   - name: Tobias Kölling
-  - name: Mark Muetzefeldt
+    affiliations:
+      - ref: mpi-m
+  - name: Mark Muetzelfeldt
+    affiliations:
+      - ref: reading
   - name: Sam Greenfield
+    affiliations:
+      - ref: AUS
   - name: Andrew Gettelman
+    affiliations:
+      - ref: PNNL
   - name: Fabian Wachsmann
+    affiliations:
+      - ref: dkrz
   - name: Orhan Eroglu
-  - name: put your name here
+    affiliations:
+      - ref: ncar
+affiliations:
+  - id: dkrz
+    name: German Climate Computing Centre (DKRZ), Hamburg, Germany
+  - id: mpi-m
+    name: Max Planck Institute for Meteorology, Hamburg, Germany
+  - id: reading
+    name: University of Reading, Reading, UK
+  - id: AUS
+    name: Australia
+  - id: PNNL
+    name: PNNL, ...
+  - id: ncar
+    name: NCAR, Boulder, CO, USA
+abstract: |
+  We present the results and technical achievements of a global, multi-model intercomparison hackathon involving over 600 participants across 10 teams. Despite minimal dedicated resources and a largely new technology stack for most teams, we successfully standardized and remapped outputs from a diverse set of regional and global climate models to a common HEALPix grid, storing the data in Zarr format and indexing it with Intake 0.7. This unified approach enabled all participating teams—regardless of background or resources—to access and analyze the same datasets efficiently. A common Python-based stack, deployed via JupyterHub by most teams, facilitated collaborative analysis and reproducibility. Our experience demonstrates the feasibility and benefits of rapid, large-scale, distributed climate data analysis using modern open-source tools and cloud-ready data formats.
 format:
   html:
     toc: true
+  copernicus-gmd-pdf:
+    keep-tex: true
+bibliography: references.bib
 ---
-## Key points for this paper
-
-* Pulled off a 600-person 10-location multi-model intercomparison with one year of run-up and close to no dedicated resources, using a tech stack that was new to n-1 teams.
-
-* 10 nodes around the globe
-  * different backgrounds / resources
-  * same view on data
-* X models, regional + global
-  * standardized names (or provided as Zarr)
-  * Output remapped to HEALPix
-  * Data stored in Zarr with
-  * Indexed with intake 0.7
-* Common python base stack
-  * JupyterHub setup at several locations
-
-## Abstract
-
-We present the results and technical achievements of a global, multi-model intercomparison hackathon involving over 600 participants across 10 teams. Despite minimal dedicated resources and a largely new technology stack for most teams, we successfully standardized and remapped outputs from a diverse set of regional and global climate models to a common HEALPix grid, storing the data in Zarr format and indexing it with Intake 0.7. This unified approach enabled all participating teams—regardless of background or resources—to access and analyze the same datasets efficiently. A common Python-based stack, deployed via JupyterHub by most teams, facilitated collaborative analysis and reproducibility. Our experience demonstrates the feasibility and benefits of rapid, large-scale, distributed climate data analysis using modern open-source tools and cloud-ready data formats.
-
 
 ## Introduction
 

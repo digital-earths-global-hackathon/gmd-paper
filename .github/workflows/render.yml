@@ -15,6 +15,10 @@ jobs:
         steps:
         - name: Checkout
           uses: actions/checkout@v4
+        - name: install-latex
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y texlive-xetex texlive-fonts-recommended texlive-fonts-extra texlive-plain-generic texlive-lang-cjk
         - name: setup
           uses: prefix-dev/setup-pixi@v0.8.3
           with:

@@ -26,4 +26,5 @@ quarto = "==1.6.40"
 
 [tasks]
 render = { cmd = ["quarto", "render", "index.qmd"] }
+render-pdf = { cmd = ["quarto", "render", "index.qmd", "--to", "copernicus-gmd-pdf"] }
 preview = { cmd = ["quarto", "preview", "index.qmd", "--no-navigate"] }

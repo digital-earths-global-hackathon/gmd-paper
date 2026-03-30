@@ -1,0 +1,24 @@
+title: Copernicus GMD
+author: Digital Earths Global Hackathon
+version: 1.0.0
+contributes:
+  formats:
+    pdf:
+      documentclass: copernicus
+      classoption: [gmd, manuscript]
+      template-partials:
+        - title.tex
+        - before-body.tex
+        - _titlepage.tex
+      format-resources:
+        - copernicus.cls
+        - copernicus.bst
+        - copernicus.cfg
+      include-in-header:
+        - packages.tex
+      cite-method: natbib
+      biblio-style: copernicus
+      keep-tex: true
+      pdf-engine: pdflatex
+      number-sections: true
+      fig-pos: "htbp"
