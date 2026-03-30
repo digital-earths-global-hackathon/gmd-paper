@@ -75,11 +75,12 @@ The technical side of the hackathon was made possible by an ad-hoc technical tea
 
 A central objective of the technical stack was to streamline the analysis and comparison of datasets. For most participants, the [data catalog](https://digital-earths-global-hackathon.github.io/catalog/) along with its machine-readable _intake_ representation served as the primary entry point. Key requirements for the machine-readable catalog included ease of data loading at any node, support for dataset variants (such as different spatial and temporal aggregations), and the ability to handle multi-file datasets, as not all data had been consolidated into single Zarr stores for each aggregation due to time constraints. The catalog also needed to be straightforward to create and maintain.
 
-The main options considered for the catalog were Intake and STAC. While STAC has become the de facto standard for satellite and other observational data, it currently lacks convenient support for dataset variants and for loading multi-file datasets as a single object. Intake exists in two major versions: Intake 2.0, which allows for describing dataset transformations during loading but has a complex description language and lacks support for dataset variants; and Intake 0.7, which supports dataset variants and multi-file datasets but is technically incompatible with Intake 2.0. For this hackathon, Intake 0.7 was selected due to its robust support for variants and multi-file datasets. For details on the catalog creation see below in section ... The choice of Intake 0.7 enabled participants to obtain an xarray dataset with a simple three-line Python script:
+The main options considered for the catalog were Intake and STAC. While STAC has become the de facto standard for satellite and other observational data, it currently lacks convenient support for dataset variants and for loading multi-file datasets as a single object. Intake exists in two major versions: Intake 2.0, which allows for describing dataset transformations during loading but has a complex description language and lacks support for dataset variants; and Intake 0.7, which supports dataset variants and multi-file datasets but is technically incompatible with Intake 2.0. For this hackathon, Intake 0.7 was selected due to its robust support for variants and multi-file datasets. For details on the catalog creation see below in section ... The choice of Intake 0.7 enabled participants to obtain an xarray dataset with a simple four-line Python script:
 
 ```python
 import intake
-cat = intake.open_catalog("https://digital-earths-global-hackathon.github.io/catalog/catalog.yaml")["online"]
+url = "https://digital-earths-global-hackathon.github.io/catalog/catalog.yaml"
+cat = intake.open_catalog(url)["online"]
 ds = cat["icon_d3hp003"](zoom=7).to_dask()
 ```
 
