@@ -1,322 +1,213 @@
 ---
-title: "km scales hacked at global scale"
+title: "Kilometer-scale climate data analysis at global scale: Technical infrastructure for a distributed multi-model hackathon"
+running-title: "Global hackathon technical infrastructure"
+running-author: "Ziemen et al."
 author:
   - name: Florian Ziemen
+    email: ziemen@dkrz.de
+    affiliations:
+      - ref: dkrz
   - name: Lukas Kluft
+    affiliations:
+      - ref: mpi-m
   - name: Tobias Kölling
-  - name: Mark Muetzefeldt
+    affiliations:
+      - ref: mpi-m
+  - name: Mark Muetzelfeldt
+    affiliations:
+      - ref: reading
   - name: Sam Greenfield
+    affiliations:
+      - ref: AUS
   - name: Andrew Gettelman
+    affiliations:
+      - ref: PNNL
   - name: Fabian Wachsmann
+    affiliations:
+      - ref: dkrz
   - name: Orhan Eroglu
-  - name: put your name here
+    affiliations:
+      - ref: ncar
+affiliations:
+  - id: dkrz
+    name: German Climate Computing Centre (DKRZ), Hamburg, Germany
+  - id: mpi-m
+    name: Max Planck Institute for Meteorology, Hamburg, Germany
+  - id: reading
+    name: University of Reading, Reading, UK
+  - id: AUS
+    name: Australia
+  - id: PNNL
+    name: PNNL, ...
+  - id: ncar
+    name: NCAR, Boulder, CO, USA
+abstract: |
+  We present the results and technical achievements of a global, multi-model intercomparison hackathon involving over 600 participants across 10 teams. Despite minimal dedicated resources and a largely new technology stack for most teams, we successfully standardized and remapped outputs from a diverse set of regional and global climate models to a common HEALPix grid, storing the data in Zarr format and indexing it with Intake 0.7. This unified approach enabled all participating teams—regardless of background or resources—to access and analyze the same datasets efficiently. A common Python-based stack, deployed via JupyterHub by most teams, facilitated collaborative analysis and reproducibility. Our experience demonstrates the feasibility and benefits of rapid, large-scale, distributed climate data analysis using modern open-source tools and cloud-ready data formats.
 format:
   html:
     toc: true
+  copernicus-gmd-pdf:
+    keep-tex: true
+bibliography: references.bib
 ---
-## Key points for this paper
-
-* Pulled off a 600-person 10-location multi-model intercomparison with one year of run-up and close to no dedicated resources, using a tech stack that was new to n-1 teams.
-
-* 10 nodes around the globe
-  * different backgrounds / resources
-  * same view on data
-* X models, regional + global
-  * standardized names (or provided as Zarr)
-  * Output remapped to HEALPix
-  * Data stored in Zarr with
-  * Indexed with intake 0.7
-* Common python base stack
-  * Jupyterhub setup at several locations
-
-## Abstract
-
-We present the results and technical achievements of a global, multi-model intercomparison hackathon involving over 600 participants across 10 teams. Despite minimal dedicated resources and a largely new technology stack for most teams, we successfully standardized and remapped outputs from a diverse set of regional and global climate models to a common HEALPix grid, storing the data in Zarr format and indexing it with Intake 0.7. This unified approach enabled all participating teams—regardless of background or resources—to access and analyze the same datasets efficiently. A common Python based stack, deployed via JupyterHub by most teams, facilitated collaborative analysis and reproducibility. Our experience demonstrates the feasibility and benefits of rapid, large-scale, distributed climate data analysis using modern open-source tools and cloud-ready data formats.
-
 
 ## Introduction
 
-* km-scale as a revolution in climate workflows
-  * previously 100km scale, now 5 km scale
-  * factor 20 horizontally yields 400 in data volume per record
-  * new workflows necessary
+Kilometer-scale global modeling is driving a revolution in climate science. Models are finally leaving the *grey zone*, where statistical descriptions of clouds within a grid cell are no longer meaningful, but clouds and large-scale turbulence are not yet resolved. Instead, these new models begin to resolve large-scale turbulence in both the atmosphere and ocean. This is why this new model generation is often called *storm-resolving* models. The revolution also extends to the sheer amount of data in a single horizontal field. Typical CMIP models operate at a scale of 100 km and usually employ some variant of a latitude/longitude grid. For example, the MPI-ESM High Resolution CMIP6 setup (MPI-ESM-HR) contained $384 \times 192 = 73{,}728$ grid cells. In contrast, the 2.5 km resolution (*R2B10*) ICON setup covers the Earth with an icosahedral grid consisting of $20 \times 4^{10} = 83{,}886{,}080$ grid cells. This factor of 1000 increase in field size, combined with the added complexity of a non-Cartesian (often called *unstructured*) grid, poses significant challenges to established workflows. This change is exemplified by a typical global map for a presentation: with $1500 \times 670$ pixels, the switch is from 14 pixels per grid cell to each pixel representing 84 grid cells (on average) for our two example setups. The explosion in data volume is not limited to climate science; similar issues are observed in bio-imaging and other fields (CITATION NEEDED).
 
-* Hackathons
-  * Rapid software prototyping
-  * started around 2000 ( https://www.openbsd.org/hackathons.html , https://doi.org/10.1080/14778238.2021.1911607, https://doi.org/10.1177/0162243915578486 ) 
-  * original idea was to develop software projects together, usually as weekend-style activity with minimial sleep
-  * Spread in all directions, with civic hacking as well as corporate hacking events
-  * Gaining traction in climate research as multi-day event where scientists meet and collaborate during normal office hours and learn workflows together
-    * Less about developing one piece of code together than about using the same / similar datasets and methods
-    * Connecting the community
-    * Forming a close link between technical and science teams
-  * previouos km-scale hackathons
-    * ESiWACE / DYAMOND Summer Hackathon
-      * At start of km-scale modeling era
-      * Started 2018 with MPI-M/DKRZ internal event, followed by an international event in June 2019 ( https://doi.org/10.5281/zenodo.3342475)
-    * Then came Covid
-    * nextGEMS
-      * H2020 project targeting the developing of km-scale models with focus on atmosphere, but also doing ocean and land processes
-      * Started in 2021 with the start of nextGEMS
-      * six hackathons evolved the workflow from native grid and intake-esm to healpix-zarr and intake 0.7
-    * EERIE
-      * H2020, more of an ocean focus, started ...
-      * also did several hackathons
-      * native grid with evolution to kerchunked netCDF/HDF5 for zarr-view
-      * data spread across compute centers, shared catalog
-      * eerie.cloud provides access to DKRZ data for users outside DKRZ
-      * both projects used shared python environments and jph for analysis
+With the advent of kilometer-scale global modeling in the late 2010s came the rise of hackathons in climate modeling. Originating as rapid software prototyping, weekend-style activities around 2000 (https://www.openbsd.org/hackathons.html, https://doi.org/10.1080/14778238.2021.1911607, https://doi.org/10.1177/0162243915578486), the idea of gathering for an intensive period of software development spread in all directions, including civic and corporate hacking events. The climate data analysis variant typically consists of multi-day events where scientists meet and collaborate during normal office hours, learning workflows together. These events tend to focus less on developing a single piece of code and more on using the same or similar datasets for analysis. They have started to replace traditional project meetings, which focused on presentations of past achievements, with collaborative get-togethers that connect the community across research institutions and foster close links between technical and scientific teams. Examples of such events include the ESiWACE/DYAMOND hackathon in June 2019 (https://doi.org/10.5281/zenodo.3342475), which accompanied the first DYAMOND intercomparison of global storm-resolving models. After a break in 2020, enforced by COVID-related restrictions, nextGEMS (https://nextgems-h2020.eu/), an H2020 project aimed at the development of storm-resolving models, initiated a series of hackathons. In these hackathons, usually tied to new experiment cycles, we iteratively updated data handling and workflows to improve the scientists' experience when working with the data. Major advances in user-friendliness came with the introduction of catalogs for data discovery, the switch to the HEALPix grid, spatiotemporal chunking in storage, Zarr for a unified view of large datasets, and the provision of a resolution hierarchy. The details of these changes will be discussed in later sections, as they were key to the decisions made in preparing for the global hackathon. In parallel to nextGEMS, EERIE (https://eerie-project.eu/) conducted hackathons that, while bringing people together in the same place, used datasets spread across multiple European data centers. Both, nextGEMS and EERIE built user workflows on catalogs, shared Python analysis environments and JupyterHub, facilitating the exchange of analysis scripts among scientists.
 
 
-* Paradigm shift from classic *downloading* towards *opening* data
-  * traditional approach (netCDF / ...) copy data over in explicit file transfers, then access those
-  * Network access via Zarr - only what you really need is transferred, and that without your intervention
-* Data sharing as default
-* Common catalog that unifies the interface to all datasets
-* previous intercomparisons
-  * CMIP
-  * DYAMOND Summer, Winter
-    * Summer: 10.1186/s40645-019-0304-z 40 days of boreal summer, aligned with the NAR-VAL2 tropical field study, protocol: Stevens 2019, come as you are, no standardization
-    * Winter: 40 days of boreal winter, aligned with EUREC4A campaign, co-inciding with Polarstern overwintering; worked our way through to netCDF, some standardization
-    * Year: doi:10.1186/s40645-024-00668-1  All datasets now are healpix/zarr -> same grid, same access.
+
+While there is a long tradition of sharing data across research centers (e.g., ESGF, GLOBUS), most of these approaches were built around creating a copy of (a subset of) the dataset at the destination site, and then analyzing this copy. In the case of petabyte-scale datasets, this becomes problematic. In contrast, the current trend of cloud-native datasets suggests loading data on demand for analysis. This led to the development of the eerie.cloud server, providing data hosted on the DKRZ parallel file system to users outside the center. 
+(-> Fabi)
+
+The open catalogs and data are more related to intercomparison projects than traditional research projects that tend to keep the data private until the first publications are written. They were therefore very well suited for the global hackathon and the connected DYAMOND phase 3 intercomparison. This intercomparison is the third in a row of intercomparison projects that focus on comparing storm-resolving models. In contrast to the coupled model intercomparison project (CMIP), where data is heavily standardized (CMOR), the first two phases of DYAMOND focused on making contributing easy by not requiring any standardization of the output. In the first phase, DYAMOND Summer (10.1186/s40645-019-0304-z) dealing with data formats, model grids and variables was left to the scienists analyzing the data. In the second phase, DYAMOND Summer (doi:10.1186/s40645-024-00668-1) contributions still were come-as-you are, but DKRZ dedicated resources to some minimal standardization of the data, making it easier to analyze the datasets. In the third phase (doi:10.1186/s40645-024-00668-1), more standardization was requested, and all datasets were remapped to the HEALPix grid for the global hackathon. This grid is in conflict to the data request paper, where lat/lon was requested, and very much representative of the dynamic nature of the DYAMOND intercomparisons. 
+
+The Global hackathon was run with self-organized nodes to minimize overhead resulting from the different ways of running activities in different countries, but with a shared technical stack to maximize opportunities for scientific collaboration. In the run-up to the hackathon, regular video conferences and a shared chat system helped harmonize planning, while technical teams collaborated closely to provide datasets with similar structure and handling. All datasets were remapped to the HEALPix grid, provided as big, coherent zarr stores, and listed in a shared catalog that supplemented locally available copies with online datasets. A coherent python-based software stack enabled code sharing across locations. Cross-node science topics, such as the tracking of mesoscale convective systems ([MCS tracking](https://digital-earths-global-hackathon.github.io/hk25/scienceteams/#mcs-tracking-hk25-mcs)), connected participants across locations and fostered collaborative analysis. In addition, cross-cutting technical activities like AI representations of the model output allowed the participants to push the envelope of technical possibilities. 
+
+The technical side of the hackathon was made possible by an ad-hoc technical team that at some nodes simply consisted of the scientific PI, and at other nodes of technical staff that was pulled in from related activities or staff resources. Due to the global and ad-hoc nature of this hackathon, there were no in-person meetings prior to the hackathon, but the coordination happened in a series of video conferences, and using Mattermost as a chat system and github for code sharing. Some scientists and technical staff joined other nodes during the hackathon to foster exchange. In the following, we will describe the run-up and technical aspects of the execution of the global hackathon in greater detail.
 
 
-* Global hackathon: 
-  * Each node is self-organized, but the organizing teams are connected to provide a consistent experience
-    * exchange between the organizational teams in run-up to harmonize things
-    * close collaboration of the technical teams to provide similar datasets
-  * cross-node science teams connecting the nodes
-    * local teams join these
-  * cross-cutting activities that explore techincal capabilities like AI representations of the model output or comparison with the EarthCARE satellite run orthogonal to science teams and link them
-  * Technical setup
-    * All datasets remapped to HEALPix, 
-    * zarr
-    * Common catalog with online DS as backup in github
-    * Shared environment spec for easy set-up of similar/identical workflow env  
+## The technical stack
 
-## Tech team
-  * Some nodes have dedicated tech staff, sometimes the PIs took the role
-  * Some previous contacts but no dedicated meeting prior to hackathon
-  * Communication via Mattermost, Github, and a bit of zoom
-  * Most experienced tech staff flew out to other nodes to assist them
+### The catalog
 
-## Tech stack
+A central objective of the technical stack was to streamline the analysis and comparison of datasets. For most participants, the [data catalog](https://digital-earths-global-hackathon.github.io/catalog/) along with its machine-readable _intake_ representation served as the primary entry point. Key requirements for the machine-readable catalog included ease of data loading at any node, support for dataset variants (such as different spatial and temporal aggregations), and the ability to handle multi-file datasets, as not all data had been consolidated into single Zarr stores for each aggregation due to time constraints. The catalog also needed to be straightforward to create and maintain.
 
-* Made data easy to analyze with common naming and shared grid with hierarchies.
-* Standard reference datasets on same grid saved repeat workflows
-* Lowering the bar with instructive examples in easy.gems, helper functions in uxarray, easygems, xdggs, and code sharing via github allowed for fast start
-* Combination of shared python environment, common catalogs with local adaptations, and central github repos with examples / code sharing enabled collaboration across nodes.
-* Healpix with hierarchy + Zarr allowed for efficient data access, even from remote systems
-* Communication during hackathon mainly relied on mattermost chat, in run-up the mix of zoom for direct exchange and mattermost for async was helpful, web page for more static info.
+The main options considered for the catalog were Intake and STAC. While STAC has become the de facto standard for satellite and other observational data, it currently lacks convenient support for dataset variants and for loading multi-file datasets as a single object. Intake exists in two major versions: Intake 2.0, which allows for describing dataset transformations during loading but has a complex description language and lacks support for dataset variants; and Intake 0.7, which supports dataset variants and multi-file datasets but is technically incompatible with Intake 2.0. For this hackathon, Intake 0.7 was selected due to its robust support for variants and multi-file datasets. For details on the catalog creation see below in section ... The choice of Intake 0.7 enabled participants to obtain an xarray dataset with a simple four-line Python script:
 
-### Catalog
-* Requirements
-  * easy to load data
-  * support for variants (time, zoom) in open call
-  * same structure for all locations, so sharing code is easy
-  * some support for multi-file datasets
-  * easy to handle
+```python
+import intake
+url = "https://digital-earths-global-hackathon.github.io/catalog/catalog.yaml"
+cat = intake.open_catalog(url)["online"]
+ds = cat["icon_d3hp003"](zoom=7).to_dask()
+```
 
-* Market
-  * Intake 0.7 does all of this, but is outdated
-  * Intake 2.0 does not do the variants, complex format
-  * STAC does not do the opening, does not do the variants, does not like more than one file per entry (asset)
-* Solution: Intake 0.7
-  * Manual description of metadata in catalog entries for each data set
-  * Automated merging of local and online resources into a sub-catalog per hackathon node via gitlab CI.
-* Outlook
-  * Improve STAC
-  * Work towards cleaner datasets
-  * Maybe adopt `DataTree` or similar structures which allow a single catalog entry to incorporate variants -> this would enable compatibility with Intake 2.0 and STAC (and likely most other tools)
+
+For future hackathons, a transition towards STAC would likely be advantageous. The requirement for cleaner datasets should be achievable as workflows improve with experience. One possible solution for managing dataset variants is to store the different variants in separate Zarr groups within a single dataset. 
 
 
 ### Grid
-* Requirements
-  * Spatially coherent storage
-  * Hierarchies
-  * Easy access
-  * Equal Area
 
-* Market
-  * Lat/Lon (not equal area, 50% data overhead compared to equal area for same res at eq)
-  * ICON / ... usually no direct computations between lat/lon and index
-  * Gaussian reduced no SFC
-  * HEALPix Ticks all boxes.
-* Solution: HEALPix, regional grids by storing indices with the data for active chunks, and filling grid cells with NaN around data
-* Outlook
-  * Fix data format specification (e.g. CF) to allow tools to grow
-  * Improve support for differential operators / ...
-  * General tooling
+High-resolution climate models employ a variety of computational grids, which complicates direct comparison between model outputs. To facilitate intercomparison during the global hackathon, all data were remapped to a common grid. The chosen grid needed to support efficient data access and storage, which translated into requirements for hierarchical structure, spatially coherent storage, direct conversion between geographic coordinates and cell indices, and equal-area cells to avoid over- or undersampling.
+
+While latitude/longitude grids offer intuitive access and spatial chunking, they suffer from significant oversampling near the poles, resulting in up to 50% more data storage compared to an equal-area grid with the same equatorial resolution. Most non-latitude/longitude grids lack space-filling curve cell ordering or direct computational relationships between geographic coordinates and model cell indices, making efficient subsetting challenging.
+
+Recently, the HEALPix grid (Górski et al., 2005) has gained traction in the geoscience community. Originally developed for astronomy, HEALPix has proven effective for representing climate model output in projects such as nextGEMS and DestinE. HEALPix decomposes the sphere into 12 equal-area diamond cells, which are recursively subdivided to create a hierarchy of grids with $12 \times 4^{n}$ cells. This structure supports nested cell ordering for spatially coherent data storage and provides direct computations for converting between geographic coordinates and cell indices.
+
+For the hackathon, the HEALPix grid was selected as the common target for remapping. For global models, this choice is straightforward; for regional models there is the quostion of how to deal with areas outside the model domain. The simple solution is to fill them with Not-a-Number (NaN) values. Compressed storage efficiently handles these NaN regions, as standard compression algorithms reduce their storage footprint to nearly zero, and Zarr can even skip writing chunks that contain only NaNs. Horizontal data chunking and careful processing remains advisable to avoid loading NaN regions into memory. An alternative approach stores only non-NaN grid cells alongside their HEALPix indices as an index vector, enabling Python syntax such as `dataset.sel(cell=12345)` to access specific HEALPix cells. Both approaches integrate with the nearest-neighbor interpolation functionality in `easygems.healpix_show`. 
+
+Since the hackathon, the specification for HEALPix grids has been [added](https://github.com/cf-convention/cf-conventions/pull/605) to the CF conventions in version [1.13](https://github.com/cf-convention/cf-conventions/releases/tag/v1.13.0), enabling data providers and tools to adopt a standardized approach for describing and interpreting HEALPix data. Further tooling support, including for differential operators, is anticipated as HEALPix continues to gain adoption within the climate modeling community.
+
 
 ### Data format
-* Requirements
-  * Open big datasets fast
-  * Chunking in all dimensions
-  * Works via network
-* Market
-  * *netCDF*(HDF5) (+Kerchunk) Can be served as zarr via remote. Needs kerchunk to get fast opening of full DS, that's only supported in py
-  * Zarr Ticks all boxes
-  * GRIB (+Kerchunk) (all downsides of netCDF + miserable chunking)
-* Solution: Mostly zarr, bits of GRIB hidden behind server, causing some trouble.
-  * Zarr 2, as zarr 3 support was still not included in all relevant libraries, e.g. `libnetcdf`.
-  * Chunks as basic unit
-    * Compression requires read/write of entire chunks
-    * Compromise between file system limits (inode quotas / availablity, IOPS), and desire for small chunks to limit accidental loading.
-    * Known for quite a while, e.g. [2013 Unidata blog entry](https://www.unidata.ucar.edu/blogs/developer/entry/chunking_data_why_it_matters)
-    * Use a compromise between time series and map access
-    * Many processing / analysis tools still think in maps, so weigh a bit in direction of maps.
-    * Zarr 2 had too many files; hard to deal with for filesystems, many HPC have inode quota
-* Outlook:
-  * Go to zarr3 to get rid of small files on disk using sharding, once more widely supported
-  * Improve netCDF support for zarr3
 
+The choice of data format was critical for enabling efficient access and analysis of large, high-resolution datasets across distributed nodes. Key requirements included the ability to open large datasets quickly, support for chunking in all dimensions, and reliable performance over network connections. Zarr natively supports all required features and was selected as the primary format for the hackathon. Several other formats were considered.  In principle, HDF5 and netCDF also support multi-file datasets, but as we have never seen this used in real-life, and thus had no prior experience on performance robustness of this approach, we refrained from using this at the scale of the hackathon. When combined with Kerchunk, netCDF can be used as pseudo-Zarr in python, providing the fast loading of full datasets, but this is only supported in Python. As km-scale datasets can grow into the PB-range, even a dataset wit (multi-) GB files would consist of thousands of files, and just opening the full dataset in `xarray` would require opening all of those and then combining the contentents across variables and time. GRIB, even with Kerchunk, has all the limitations of NetCDF and additionally suffers from poor chunking performance. For some of the IFS data we still used this in combination with DKRZ's xpublish-based eerie.cloud server, providing the IFS data as zarr to the outside world. The global GRIB data chunks however led to severe performance penalties for this approach.
 
-### Python environment
-* Requirements
-  * Python stack that can open and do standard analysis on data
-* Market
-  * conda(forge) works, and includes pip support
-  * pip needs a python
-  * pixi is nicer, but less known, conda-(forge) based
-  * uv could also be used
-* Solution: Conda recipe in github with some CI testing
-* Outlook:
-  * Consider pixi
+The datasets were provided in Zarr version 2, as support for Zarr version 3 was not yet available in all relevant libraries, such as `libnetcdf`. Zarr’s chunk-based storage model offers advantages for both compression and data access, but requires careful balancing between file system constraints (e.g., inode quotas and IOPS) and the desire for small chunks to minimize unnecessary data loading. When chosing the chunk shape, one is faced with a trade-off between optimizing for map-based access and pointwise timeseries (see [Unidata blog, 2013](https://www.unidata.ucar.edu/blogs/developer/entry/chunking_data_why_it_matters)). For the hackathon, chunk sizes were chosen to balance efficient access for both time series and map-based analyses, shifting the focus towards map-based access as we recognized that many processing tools still operate primarily on map data. However, Zarr version 2 can generate a large number of files, which can be challenging for file systems, especially on HPC platforms with inode quotas.
 
-### HPC access
-* Requirements
-  * Nodes with some compute power for data-intensive analyses
-  * User-friendly scripting environment
-  * Nodes with internet access for working with remote datasets
-* Market
-  * JPH has no requirements on user side, bit of hassle to install server
-  * VS Code needs user with VS code, and server that has not completely outdated OS, otherwise easy on server side
-  * Other editors (PyCharm...) can do similar things
-* Solution:
-  * Most nodes JPH
-  * VS Code / ... also used
-* Outlook:
-  * By and large good, proxies would be useful.
-* We've had a quite reasonable experience with the smaller nodes in Japan, and even working on the laptop was not that bad. Of course for huge post-processing tasks, a bit of compute power doesn't hurt.
-
-
-### Communication platform
-* Requirements
-  * Easy accounts for all participants
-  * Intuitive usage
-* Market
-  * Slack / other commercial - usually restricted in free mode
-  * mpi-m mattermost - easy, free for mpi-related projects, sends e-mails in case of mentions.
- * Outlook
-   * Mattermost worked very well. Matrix might be of interest as alternative.
-
-### Code sharing
-* Requirements
-  * Easy accounts for all participants
-  * Some review process
-* Market
-  * Self-hosted gitlab - works, but a bit messy on the accounts
-  * other cloud providers - most don't have accounts
-* Solution: Github code repo w/ a bit of PR review
-* Outlook
-  * Carefully review situation and options before next hackathon
-  * Train people beforehand
-  * Only allow for %-style notebooks without embedded figures and have CI in place to run the notebooks
-  * Keep tech stack limited
-
-
-### Custom python packages
-* easygems - basic functions for use of HEALPix in climate context
-  * `healpix_show` for efficient plotting
-  * delauney triangulation for remap
-  * healpix to lat/lon
-  * Temporary collection of these functions with the hope of merging them into more mature packages, such as UXArray.
-* UXArray -> TODO: Orhan
-  * Xarray extension for unstructured grids
-  * Allowed participants to leverage familiar xarray-based analysis tools on HEALPix grid geometries without custom code 
-* XDGGS
-  * Xarray extension for discrete global grids
-  * leverages structure of grid systems for operations more efficient than on unstructured grids
-
-
-
+Looking forward, adoption of Zarr version 3 is anticipated, as its sharding capability will significantly reduce the number of files on disk. Improved support for Zarr 3 in NetCDF and other zarr reading libraries will further enhance interoperability and performance for future large-scale climate data analyses. However, the current situation for the US science funding makes it unclear how fast this is to be expected to be available.
 
 ### Documentation
-* easy.gems
-  * Curated collection of examples for analysis codes showing access and plot methods, not a collection of analysis scripts
-  * Instructions for creating own scripts for converting data to HEALPix / Zarr
-* pythia -> TODO: Julia Kent?
-* hackathon page(s)
-  * https://digital-earths-global-hackathon.github.io/ - main page created to coordinate the run-up of the hackathon
-  * https://digital-earths-global-hackathon.github.io/hk25/ created for the participants as a forward facing page and main entry point with key information and links
-  * Node pages for registration at the nodes
-  * https://github.com/digital-earths-global-hackathon/hk25-teams with sub-readmes for teams with code-sharing attached.
+
+To document the planning and the workflows for the hackathon we created and used a set of web-pages. https://digital-earths-global-hackathon.github.io was the main page created in the planning of the hackathon, and contained information for the hosting teams. The information for the particpants was collected in a separate site reachable via https://digital-earths-global-hackathon.github.io/hk25 . Each node created its own registration and local planning pages. Finally a GitHub repository at https://github.com/digital-earths-global-hackathon/hk25-teams contained readme files for the topical teams that went beyond the information provided via https://digital-earths-global-hackathon.github.io/hk25.
+
+For the data processing, we pointed the participants to [project pythia](https://projectpythia.org), *the education working group for Pangeo*, and [easy.gems](https://easy.gems.dkrz.de), a collection of examples for analysis codes showing access and plot methods, and instructions for creating own scripts for converting data to HEALPix / Zarr run by MPI-M and DKRZ.
+
+
+### Python environment 
+
+To facilitate seamless collaboration across distributed nodes, we established a standardized Python software stack capable of accessing all datasets in the catalog and performing standard analysis tasks.
+
+The primary options for Python package management consist of the conda-forge ecosystem and the Python Package Index (PyPI). Each system contains packages unavailable in the other, necessitating a hybrid approach. We selected conda-forge as the primary package manager due to its compatibility with additional PyPI packages via `pip` installation. Mamba was recommended as the package installer due to its established reliability and performance advantages over the standard conda installer. The environment specification was maintained via GitHub, with automated daily testing of package installation, data access functionality, and basic plotting capabilities using GitHub Actions. This continuous integration approach enabled rapid detection of compatibility issues arising from package updates while maintaining currency with the evolving ecosystem.
+
+For future hackathons, [`pixi`](https://pixi.prefix.dev/) represents a promising alternative installer for conda-forge environments, offering significant performance improvements. Similarly, [uv](https://docs.astral.sh/uv/) would be well-suited for PyPI-only environments due to its exceptional installation speed.
+
+
+### HPC access
+
+The computational infrastructure requirements for data analysis encompassed three primary considerations: sufficient memory resources for large dataset processing, internet connectivity for remote data access, and user-friendly scripting environments.
+
+Most participating sites deployed their Python environments alongside JupyterHub installations, providing browser-based access to HPC resources. Integration with HPC schedulers such as SLURM enabled efficient user distribution across compute nodes while maintaining process isolation to prevent resource contention between concurrent analyses. Alternative approaches included remote-capable editors such as Visual Studio Code combined with SLURM job submission for Python script execution.
+Experience at DKRZ indicates that hackathons supporting approximately 100 participants require dedicated allocation of 10 high-memory nodes (512 GB RAM each) for interactive analysis workloads.
+
+Computational requirements vary significantly based on research objectives and participant technical proficiency. Effective utilization of the resolution hierarchy, appropriate chunking strategies, and intermediate result caching enable many analyses to execute on modest hardware platforms, including standard laptops. Training programs and technical consulting can substantially reduce resource requirements in many cases. However, some analyses necessitate processing of complete high-resolution datasets, requiring dedicated HPC infrastructure.
+
+### Communication platform
+
+Effective communication infrastructure was essential for both preparation phases and hackathon execution, requiring a platform supporting universal account creation and intuitive operation. While commercial solutions such as Slack impose limitations on free-tier usage, MPI-M's self-hosted Mattermost installation provided an established solution already deployed across multiple European projects, eliminating setup and maintenance overhead. Mattermost offers comparable functionality to commercial alternatives while providing institutional control over data and user management. A critical feature of this installation is automated email notification for user mentions, ensuring message delivery to participants who do not actively monitor the platform, maintaining engagement throughout extended collaboration periods.
+
+Equivalent functionality could be achieved through alternative self-hosted solutions, with Matrix offering additional federation capabilities. The selection was primarily driven by operational convenience among functionally equivalent options.
+
+
+### Code sharing
+
+The code sharing infrastructure aimed to facilitate cross-site collaboration by enabling scientists to share analysis implementations for application to different datasets, while establishing a persistent repository of analysis methods for post-hackathon utilization. Key requirements included accessible account management for all participants and structured review processes for quality control.
+
+GitHub was selected over self-hosted GitLab or alternative providers due to widespread existing account ownership among participants and straightforward account creation procedures. A centralized repository was established with mandatory pull request reviews for main branch contributions, balancing minimal participant burden with essential quality assurance and error detection capabilities. However, post-hackathon evaluation identified code sharing as a significant challenge requiring enhanced approaches for future events.
+
+A primary technical issue involved Jupyter notebook file size inflation due to embedded plot outputs. This could potentially be addressed by standardizing on percent-format notebooks (plain Python files with `# %%` cell delimiters) combined with continuous integration systems executing notebooks against online datasets. However, such automation would require notebooks to operate within constrained computational resources and might encounter compatibility issues with specialized analysis packages.
+
+Overall effectiveness could be improved through pre-hackathon training programs covering version control systems, collaborative development practices, and efficient analysis techniques. However, such initiatives would require significant resource allocation and planning commitment in preparation phases.
+
+### Custom Python packages
+
+To optimize analysis performance on the HEALPix grid, several specialized Python packages were developed and deployed. These tools build upon established foundational libraries: [`healpix`](https://github.com/ntessore/healpix) and [`healpy`](https://healpy.readthedocs.io/en/latest/), which provide core HEALPix grid functionality. The choice between these libraries involves licensing considerations, with `healpy` distributed under the GPL license while `healpix` employs the more permissive BSD 3-clause license.
+
+The [`easygems`](https://github.com/mpimet/easygems) package provides lightweight utility functions optimized for hackathon workflows, including the `healpix_show` function for rapid visualization of high-resolution HEALPix data as demonstrated on the [easy.gems](https://easy.gems.dkrz.de) documentation portal. Additional functionality includes optimized routines for data transformation to and from HEALPix representations.
+
+[XDGGS](https://github.com/xarray-contrib/xdggs) extends the xarray ecosystem with specialized functionality for Discrete Global Grid Systems (DGGS), including HEALPix. By focusing on the subset of unstructured grids with inherent spatial structure, XDGGS achieves superior computational efficiency compared to generic unstructured grid approaches.
+
+[UXarray](https://uxarray.readthedocs.io/) adopts a comprehensive approach to unstructured grid support, providing generalized functionality for diverse grid types including specialized readers for HEALPix and other structured variants.
+
 
 ## Preparation
 
-* Talks on data concept in Fall 2024
-  * Explaining the ideas behind the tech stack to all teams
-  * Slides for several talks were kept available via [hackathon page](https://digital-earths-global-hackathon.github.io/talks/)
+Preparatory activities for the hackathon commenced in late 2023 with initial concept development and team identification. Throughout 2024, the fundamental framework was disseminated to prospective participants and institutional nodes were established. Formal technical preparations began in Fall 2024 with a two-day virtual workshop featuring presentations on core technical concepts and implementation strategies. Presentation materials were archived on the [hackathon website](https://digital-earths-global-hackathon.github.io/talks/) with recordings distributed to participating teams for reference.
 
-* [Explanatory examples](https://easy.gems.dkrz.de/Processing/healpix/index.html) on easy.gems
-* All remap their datasets to HEALPix
-* All convert data to zarr
-* Difficulties
-  * Many runs arrive last-minute
-  * Lack of dedicated staff, so things only happen last-minute
-  * Zoo of formats / variants
-  * Inconsistencies between different datasets, e.g. missing crs information or different chunking decisions
-  * Lack of standardization of the metadata (?)
+The data specification was collaboratively developed through a shared GitHub repository integrated with the hackathon documentation system. This specification underwent iterative refinement through community discussion to achieve an optimal balance between dataset comprehensiveness and manageable data volumes.
+
+To facilitate seamless intercomparison, all datasets required standardization to HEALPix grid format and Zarr storage, necessitating substantial preprocessing efforts. Among participating models, only ICON and IFS possess native HEALPix output capability; all other model outputs required grid transformation. Additionally, with the exception of ICON, no models produced Zarr-format outputs, requiring format conversion for all datasets. [Technical documentation](https://easy.gems.dkrz.de/Processing/healpix/index.html) detailing conversion procedures was provided through the easy.gems platform. The combination of late-arriving simulation outputs and limited dedicated technical personnel at some nodes created significant challenges in completing multi-terabyte dataset conversions within hackathon timelines. In several cases, the data preprocessing effort exceeded the effort involved in the original model simulations using established workflows. The heterogeneous nature of model output formats precluded development of universal conversion tools, requiring dataset-specific processing approaches. Integration of pre-existing simulation data introduced additional complexity, as perfect harmonization of output variables and temporal frequencies across all models was not achievable, though efforts were made to maximize dataset coherence.
 
 ### Remapping
-* Algorithms
-  * NN - Simple, keeps columns intact for extreme value analysis or analysis of non-linear properties (T - rel hum - spec hum), damages gradient and similar operators
-  * Delaunay Triangulation - keeps gradients intact, damages extreme values / ...
-  * Conservative - assuming great circles as cell edges, should not do much damage at high res.
-* Tools
-  * YAC / on the fly - various algorithms available, including distance weighted, conservative, NN. ICON used NN to one too high grid, and then cons aggregation, needs to be integrated with model prior to running.
-  * CDO - Various, see YAC
-  * Python - Dalaunay and NN expamples provided (?)
-* Challenges for regional data with missing value mask
 
-### Zarr-ification
-* Often as part of remap
-* Rechunking can be hard for GRIB / stupid layouts - IFS was done in two-pass
-* gribscan + eerie.cloud as fallback for IFS, ended up overloaded.
-* typically the rate limiting steps.
-* Had to be distributed, in many cases to scientific (non-technical) staff, needs more advancing as this was almost as much of a pain as running models.
+Multiple remapping approaches were available for transforming native model grids to the target HEALPix configuration, with modeling teams selecting methods based on their specific requirements and technical constraints. Nearest-neighbor remapping represents the most straightforward approach, typically implemented using K-D tree algorithms. This method preserves non-linear relationships between variables by directly transferring values from native grid points, though prior vertical interpolation to pressure levels may have already compromised such relationships. The primary limitation of nearest-neighbor remapping is spatial displacement of data points, which degrades gradient calculations and related differential operators. 
 
-### Hierarchy generation
-* Generally easy
-* Some issues with missing values / regional grids
+Delaunay triangulation-based interpolation offers an alternative that better maintains spatial gradients through linear interpolation between native grid vertices. However, this approach tends to smooth extreme values and may compromise non-linear variable relationships. Conservative remapping preserves area-averaged quantities but similarly introduces smoothing effects.
 
-### Data provision across nodes
-* On-line data storage
-  * Object stores at DKRZ, JASMIN
-  * Web servers serving from HPC storage for NICAM (nowake), DKRZ (eerie.cloud)
-  * Need local proxies in future to avoid frequent re-transfer of data between nodes.
-* Copying data
-  * rclone
-  * globus
-  * difficult with last-minute data-set arrivals
-  * Much of data usually not used, so a bit of a waste if data can be cached on-demand
-* Aim of max one copy per dataset and node, as DS are big.
+Within the HEALPix framework, standard interpolation algorithms assume great circle boundaries for grid cells, introducing theoretical geometric errors. However, at the 10 km spatial scales characteristic of this study, such approximation errors remain practically negligible. Following remapping to the finest HEALPix resolution level, coarser resolution levels were generated through hierarchical averaging. Four spatially adjacent cells (consecutive in the nested ordering scheme) were combined into single coarser-level cells. For datasets containing missing values, appropriate weighting based on valid data fractions was implemented to maintain conservation properties throughout the resolution hierarchy.
 
-### Catalog building
-* Intake0.7
-* Manual description of metadata in catalog entries for each data set
-* Script that merges catalogs with online catalog running in github CI
-* Web page with brief descriptions
-* Links to visualization where data available online.
+Several established tools support these remapping operations. The ICON model employs its YAC coupler to remap from native icosahedral grids to HEALPix through the hiopy output server. YAC's remapping algorithms are also accessible via the Climate Data Operators (CDO) suite. Nearest-neighbor interpolation and Delaunay triangulation implementations are readily available in Python and documented through the easy.gems platform.
+
+
+### Data format conversion
+
+Dataset conversion to Zarr format was typically integrated with the remapping workflow. While most remapping approaches operate optimally on complete 2D fields, efficient access to both time series and spatial maps requires multidimensional chunks spanning all dataset dimensions, targeting sizes of a few megabytes.
+
+This chunking strategy introduces computational challenges, as large 4D data cubes must be maintained in memory for efficient reorganization. For the IFS 2.8 km simulation, global GRIB fields were initially divided into smaller regional chunks and written to intermediate storage before final assembly into multidimensional chunks. This approach proved more efficient than direct processing, even on supercomputer nodes with 1 TB of main memory.
+
+Some IFS datasets were retained in their original format and accessed through Kerchunk indexing, providing virtual Zarr access via Python libraries or DKRZ's xpublish-based eerie.cloud server. However, the global extent of GRIB data chunks resulted in significant performance penalties for remote access patterns.
+
+### Data distribution and access
+
+The majority of datasets were made available as online-accessible Zarr stores distributed across multiple institutions. DKRZ and JASMIN provided datasets through their object storage systems, while the NICAM team operated a dedicated web server. DKRZ additionally served IFS datasets via their eerie.cloud infrastructure.
+
+Given the high frequency of common data subset analysis by multiple users, implementing reverse proxy caching at hackathon sites would likely yield substantial performance improvements. However, establishing such infrastructure for multi-terabyte datasets with 50 MB chunk sizes presents significant technical challenges and was not implemented for this event. This capability should be prioritized in future iterations.
+
+Pre-hackathon data replication across nodes helped minimize transfer requirements during the event. The rclone utility proved effective for copying data from object stores and web servers, while NERSC provided datasets through the Globus file transfer system. The replication approach faces limitations when datasets arrive close to the hackathon deadline, as frequently occurs with dedicated simulations. Additionally, complete dataset replication requires substantial local storage resources and may include variables unnecessary for specific user communities. Consequently, selective replication through caching seems preferable for high-resolution dataset variants.
+
+### Data catalog development
+
+Effective data discovery required a comprehensive catalog system accessible to users across all participating nodes. The catalog needed to support dataset variants (different spatial and temporal aggregations), multi-file datasets, and straightforward maintenance procedures.
+
+Two primary catalog standards were evaluated: SpatioTemporal Asset Catalogs (STAC) and Intake. While STAC has emerged as the standard for satellite and observational data, its design emphasizes cataloging numerous individual objects with explicit geometries, reflecting its origins in satellite imagery. This architecture suits datasets with millions of discrete assets but less effectively serves climate model outputs, which typically comprise unified global datasets available at multiple resolutions where spatiotemporal metadata is less critical.
+
+Intake version 0.7 was selected for its robust support of parameterized datasets, enabling syntax such as `icon_d3hp003(zoom=7, time="PT1H", time_method="mean")` to specify dataset variants. This approach clearly separates the model realization (`icon_d3hp003`) from spatiotemporal aggregation parameters. Intake 0.7 also supports multi-file dataset definitions, reducing preprocessing requirements during data preparation phases.
+
+The catalog was maintained through a GitHub repository with YAML-based dataset descriptions, largely adapted from existing nextGEMS and EERIE catalog entries by manual editing (manageable for the 44 datasets involved). A Python script executed via GitHub CI combined individual entries into a [unified catalog](https://digital-earths-global-hackathon.github.io/catalog/catalog.yaml). In this process, locally available datasests were supplemented with those available online where needed. A second script generated the [human-readable landing page](https://digital-earths-global-hackathon.github.io/catalog) from the embedded descriptions. For online datasets, links to [a JavaScript-based web viewer](https://gridlook.pages.dev/) enabled interactive data inspection.
 
 ## Lessons learned
 
-* Overall Success
-  * People pick up new workflows extremely fast if supported
-  * Shared environment worked well, and allowed cooperation across nodes
-  * Pre-copying allowed nodes with limited bandwidth to have data at hand, needs simulations to be finished pre-hackathon
-* Have in-person meeting for tech team prior to hackathon, nothing is as good as actually meeting people
-* Tech team working closely with science team was very effective
-  * Find and solve key pain points
-  * Iteration and connections meant tech effort focused on key pain points for workflow
-  * lots of prototyping about what would work for scientists before major development.
+Overall, the hackathon was a great success. The close collaboration between the technical and science teams during the hackathon proved extremely useful. The scientists made good use of the examples and instructions provided and picked up the new workflows extremely fast. At the same time, the technical team could observe their ways of interacting with the data and find and solve key pain points. These rapid development cycles minimized dead-end developments.
+The shared coding environment allowed for collaboration across nodes. Distributing the data before the hackathon reduced the bandwidth requirements for cross-global access but also required the simulations to be provided in advance, which did not work in all cases. In retrospect, it would have been useful to have an in-person meeting with the technical team before the hackathon, as direct communication is much more effective than remote. This has proven useful in the nextGEMS hackathons, where most of the technical staff was located in Germany anyways, but would have been more complicated here given the global context of this project, and the lack of dedicated technical staff at some of the nodes. Also, language barriers still exist and complicate international collaboration, however, we expect these to be reduced by international exchange and large language models in the future.
