@@ -46,6 +46,7 @@ abstract: |
 format:
   html:
     toc: true
+    number-sections: true
     # Figures without an extension resolve to the vector file generated for
     # this format (see the figure tasks in pixi.toml); LaTeX picks .pdf itself.
     default-image-extension: svg
@@ -72,13 +73,25 @@ The Global hackathon was run with self-organized nodes to minimize overhead resu
 The technical side of the hackathon was made possible by an ad-hoc technical team that at some nodes simply consisted of the scientific PI, and at other nodes of technical staff that was pulled in from related activities or staff resources. Due to the global and ad-hoc nature of this hackathon, there were no in-person meetings prior to the hackathon, but the coordination happened in a series of video conferences, and using Mattermost (https://mattermost.com/) as a chat system and github for code sharing. Some scientists and technical staff joined other nodes during the hackathon to foster exchange. In the following, we will describe the run-up and technical aspects of the execution of the global hackathon in greater detail.
 
 
-## The technical stack
+## The technical stack provided for the hackathon participants
 
 ### The catalog
 
-A central objective of the technical stack was to streamline the analysis and comparison of datasets. The access to data sets was simplified by defining a `catalog': a systematic and structured list of available data sets that abstracted the locations and provided metadata. For most participants, the data catalog [@degh_catalog] along with its machine-readable _intake_ representation *(Not sure what a 'machine-readable _intake_ representation' means. Maybe another sentence? What is the difference between the catalog and the machine readable part?)* served as the primary entry point. Key requirements for the machine-readable catalog included ease of data loading at any node, support for dataset variants (such as different spatial and temporal aggregations), and the ability to handle multi-file datasets, as not all data had been consolidated into single Zarr stores for each aggregation due to time constraints. The catalog also needed to be straightforward to create and maintain.
+A central objective of the technical stack was to streamline the analysis and comparison of datasets. The access to data sets was simplified by defining a `catalog': a systematic and structured list of available data sets that abstracted the locations and provided metadata. This catalog had two representations. A human-readable catalog overview page (Fig 1, @degh_catalog), and a its machine-readable _intake_ representation.
 
-The main options considered for the catalog were Intake and STAC *(links?)*. While STAC has become the de facto standard for satellite and other observational data, it currently lacks convenient support for dataset variants and for loading multi-file datasets as a single object. Intake exists in two major versions: Intake 2.0, which allows for describing dataset transformations during loading but has a complex description language and lacks support for dataset variants; and Intake 0.7, which supports dataset variants and multi-file datasets but is technically incompatible with Intake 2.0. For this hackathon, Intake 0.7 was selected due to its robust support for variants and multi-file datasets. For details on the catalog creation see below in section ... The choice of Intake 0.7 enabled participants to obtain an xarray dataset with a simple four-line Python script similar to that below:
+![Overview page of the catalog.](Images/catalog-overview.png)
+
+The overview page features a list of all datasets available at some node. Observation-based datasets were only few and pulled to the front by spelling their name in capitals. Each dataset name is followed by the default parameters used for loading in the machine-readable catalog, and -- if the data is availabe as zarr via https -- by a little logo linking to an interactive visualization with Gridlook [@gridlook]. This is followed by a listing of the available variants of the dataset, and a dataset description. At the bottom of each dataset description there is a little overview where hackathon nodes hosting (white) and reaching (blue) the dataset are listed. Datasets provided as online by any node are listed as being hosted by the _online_ node, and available at all nodes.
+
+Key requirements for the machine-readable catalog included ease of data loading at any node, support for dataset variants (such as different spatial and temporal aggregations), and the ability to handle multi-file datasets, as not all data had been consolidated into single Zarr stores for each aggregation due to time constraints. The catalog also needed to be straightforward to create and maintain.
+
+The main options considered for the catalog were Intake and STAC *(links?)*. 
+
+While STAC has become the de facto standard for satellite and other observational data, it currently lacks convenient support for dataset variants and for loading multi-file datasets as a single object. its design emphasizes cataloging numerous individual objects with explicit geometries, reflecting its origins in satellite imagery. This architecture suits datasets with millions of discrete assets but less effectively serves climate model outputs, which typically comprise unified global datasets available at multiple resolutions where spatiotemporal metadata is less critical.
+
+ Intake exists in two major versions: Intake 2.0, which allows for describing dataset transformations during loading but has a complex description language and lacks support for dataset variants; and Intake 0.7, which supports dataset variants and multi-file datasets but is technically incompatible with Intake 2.0. For this hackathon, Intake 0.7 was selected due to its robust support for variants and multi-file datasets. For details on the catalog creation see @sec-catalog-development.
+ 
+ The choice of Intake 0.7 enabled participants to obtain an xarray dataset with a simple four-line Python script similar to that below:
 
 ```python
 import intake
@@ -87,11 +100,8 @@ cat = intake.open_catalog(url)["online"]
 ds = cat["icon_d3hp003"](zoom=7).to_dask()
 ```
 
-Each node built a catalog file themselves and a unified code *(is that the right word)* pulled in the local node catalog as well as an `online' catalog of datasets available in the cloud (see example code above). The catalog specifies the exact local filepaths and cloud locations, enabling abstraction for the user: they don't need to know file names or paths. The metadata is also available for the user to query.
-
 For future hackathons, a transition towards STAC would likely be advantageous. The requirement for cleaner datasets should be achievable as workflows improve with experience. One possible solution for managing dataset variants is to store the different variants in separate Zarr groups within a single dataset. 
 
-> **Comment:** An image of the catalog would be good. Also, it would be great to add a description of the catalog web viewer tool (and data viewer). Can note how the catalog enabled that (and could enable other applications). 
 
 ### Grid
 
@@ -105,6 +115,7 @@ For the hackathon, the HEALPix grid was selected as the common target for remapp
 
 Since the hackathon, the specification for HEALPix grids has been added [@cfconventions_pr605] to the CF conventions *(define CF conventions)* in version 1.13 [@cfconventions_v113], enabling data providers and tools to adopt a standardized approach for describing and interpreting HEALPix data. It was also added to some of the analysis packages (see below). Further tooling support, including for differential operators, is anticipated as HEALPix continues to gain adoption within the climate modeling community.
 
+For details on the remapping performed see @sec-remapping
 
 ### Data format
 
@@ -112,9 +123,9 @@ The choice of data format was critical for enabling efficient access and analysi
 
 The datasets were provided in Zarr version 2, as support for Zarr version 3 was not yet available in all relevant libraries, such as `libnetcdf`. Zarr’s chunk-based storage model offers advantages for both compression and data access, but requires careful balancing between file system constraints (e.g., inode quotas and IOPS *(define Inode and IOPS)*) and the desire for small chunks to minimize unnecessary data loading. When chosing the chunk shape, one is faced with a trade-off between optimizing for map-based access and pointwise timeseries [@unidata_chunking]. For the hackathon, chunk sizes were chosen to balance efficient access for both time series and map-based analyses, shifting the focus towards map-based access as we recognized that many processing tools still operate primarily on map data. However, Zarr version 2 can generate a large number of files, which can be challenging for file systems, especially on HPC platforms with inode quotas.
 
-Looking forward, adoption of Zarr version 3 is anticipated, as its `sharding' capability (the ability to read partial data within a file) will significantly reduce the number of files on disk. Improved support for Zarr 3 in NetCDF and other zarr reading libraries will further enhance interoperability and performance for future large-scale climate data analyses. Prioritizing this development for Zarr is a priority for making the format more usable and robust for large data sets.
+For details on the data conversion in the preparation see @sec-data-format-conversion.
 
-> **Comment**: Should this section also have a paragraph on data conversion issues? I could work on that with some of the others who had to actually convert the data. It's touched on, but maybe not enough? It was a major pain point and we should try to share the lessons learned.
+Looking forward, adoption of Zarr version 3 is anticipated, as its `sharding' capability (the ability to read partial data within a file) will significantly reduce the number of files on disk. Improved support for Zarr 3 in NetCDF and other zarr reading libraries will further enhance interoperability and performance for future large-scale climate data analyses. Prioritizing this development for Zarr is a priority for making the format more usable and robust for large data sets.
 
 ### Documentation
 
@@ -139,7 +150,6 @@ The computational infrastructure requirements for data analysis encompassed thre
 Most participating sites deployed their Python environments alongside JupyterHub *(link?)* installations, providing browser-based access to HPC resources. Integration with HPC schedulers such as SLURM enabled efficient user distribution across compute nodes while maintaining process isolation to prevent resource contention between concurrent analyses. Alternative approaches included remote-capable editors such as Visual Studio Code combined with SLURM job submission for Python script execution.
 Experience at DKRZ indicates that hackathons supporting approximately 100 participants require dedicated allocation of 10 high-memory nodes (512 GB RAM each) for interactive analysis workloads.
 
-> **Comment:** also good to explictly note the experience of smaller nodes or individuals without resources? What is the minimum and how does it work. 
 
 Computational requirements vary significantly based on research objectives and participant technical proficiency. Effective utilization of the resolution hierarchy, appropriate chunking strategies, and intermediate result caching enable many analyses to execute on modest hardware platforms, including standard laptops. Training programs and technical consulting can substantially reduce resource requirements in many cases. However, some analyses necessitate processing of complete high-resolution datasets, requiring dedicated HPC infrastructure.
 If this is provided with JupyterHub type access however, it only requires a local web browser and minimal transfer of information over a network (processing is done at a data center without copying). 
@@ -151,17 +161,15 @@ Effective communication infrastructure was essential for both preparation phases
 Equivalent functionality could be achieved through alternative self-hosted solutions, with Matrix offering additional federation capabilities. The selection was primarily driven by operational convenience among functionally equivalent options.
 
 
-### Code sharing
+### Analysis Code sharing
 
-> **Comment:** This section should probably discriminate between scientific code collaboration and the code collaboration necessary for the hackathon. What is below is the scientific part. Maybe also describe that the common elements: python environment, catalog, dataset creation scripts, were shared by the organizers, and the common web pages with information for participants and data descriptions were hosted on github and then piped into the web software
+To get scientists started, a basic tutorial was provided [@analysis-tutorial], and some nodes ran a pre or start of hackathon tutorial, or provided specific instructions to their participants.
 
 The code sharing infrastructure aimed to facilitate cross-site collaboration by enabling scientists to share analysis implementations for application to different datasets, while establishing a persistent repository of analysis methods for post-hackathon utilization. Key requirements included accessible account management for all participants and structured review processes for quality control.
 
 GitHub was selected over self-hosted GitLab or alternative providers due to widespread existing account ownership among participants and straightforward account creation procedures. A centralized repository was established with mandatory pull request reviews for main branch contributions, balancing minimal participant burden with essential quality assurance and error detection capabilities. However, post-hackathon evaluation identified code sharing as a significant challenge requiring enhanced approaches for future events.
 
 A primary technical issue involved Jupyter notebook file size inflation due to embedded plot outputs. This could potentially be addressed by standardizing on percent-format notebooks (plain Python files with `# %%` cell delimiters) combined with continuous integration systems executing notebooks against online datasets. However, such automation would require notebooks to operate within constrained computational resources and might encounter compatibility issues with specialized analysis packages.
-
-> **Comment:** we did provide a page of basic tutorials, and some nodes ran a pre or start of hackathon tutorial. Maybe note that
 
 Overall effectiveness could be improved through pre-hackathon training programs covering version control systems, collaborative development practices, and efficient analysis techniques. However, such initiatives would require significant resource allocation and planning commitment in preparation phases.
 
@@ -187,9 +195,8 @@ The data specification was collaboratively developed through a shared GitHub rep
 
 To facilitate seamless intercomparison, all datasets required standardization to HEALPix grid format and Zarr storage, necessitating substantial preprocessing efforts. Among participating models, only ICON and IFS possess native HEALPix output capability; all other model outputs required grid transformation. Additionally, with the exception of ICON, no models produced Zarr-format outputs, requiring format conversion for all datasets. Technical documentation [@easygems_processing] detailing conversion procedures was provided through the easy.gems platform. The combination of late-arriving simulation outputs and limited dedicated technical personnel at some nodes created significant challenges in completing multi-terabyte dataset conversions within hackathon timelines. In several cases, the data preprocessing effort exceeded the effort involved in the original model simulations using established workflows. The heterogeneous nature of model output formats precluded development of universal conversion tools, requiring dataset-specific processing approaches. Integration of pre-existing simulation data introduced additional complexity, as perfect harmonization of output variables and temporal frequencies across all models was not achievable, though efforts were made to maximize dataset coherence. Sharing of experiences and close collaboration with techinical experts and scientists doing the conversion were essential for completing the conversions, and are definitely a place where the technical aspects could be improved.
 
->> **Comment:** Maybe comment on what worked well for preparation, what was viewed as essential, and what could be done better. 
 
-### Remapping
+### Remapping {#sec-remapping}
 
 Multiple remapping approaches were available for transforming native model grids to the target HEALPix configuration, with modeling teams selecting methods based on their specific requirements and technical constraints. Nearest-neighbor remapping represents the most straightforward approach, typically implemented using K-D tree algorithms. This method preserves non-linear relationships between variables by directly transferring values from native grid points, though prior vertical interpolation to pressure levels may have already compromised such relationships. The primary limitation of nearest-neighbor remapping is spatial displacement of data points, which degrades gradient calculations and related differential operators. 
 
@@ -203,7 +210,7 @@ Within the HEALPix framework, standard interpolation algorithms assume great cir
 Several established tools support these remapping operations. The ICON model employs its YAC coupler to remap from native icosahedral grids to HEALPix through the hiopy output server. YAC's remapping algorithms are also accessible via the Climate Data Operators (CDO) suite. Nearest-neighbor interpolation and Delaunay triangulation implementations are readily available in Python and documented through the easy.gems platform.
 
 
-### Data format conversion
+### Data format conversion {#sec-data-format-conversion}
 
 Dataset conversion to Zarr format was typically integrated with the remapping workflow. While most remapping approaches operate optimally on complete 2D fields, efficient access to both time series and spatial maps requires multidimensional chunks spanning all dataset dimensions, targeting sizes of a few megabytes.
 
@@ -213,25 +220,20 @@ Some IFS datasets were retained in their original format and accessed through Ke
 
 Remapping was a time and memory intensive step which requires detailed knowledge of the input and output desired data set structure. This is difficult for non-techinical users. The technical team worked with scientific developers to try to standardize the process, but it is a place where better tools and guidence could be advanced to make the step easier. The remapping and chunking does have an impact both on the speed of the remapping process and the needed memory, as well as the speed of retrieving the data: properly chunked zarr data sets are more efficient to write and to read. 
 
+
+>> **Comment:** Maybe comment on what worked well for preparation, what was viewed as essential, and what could be done better. 
+
 ### Data distribution and access
 
-The majority of datasets *(was it actually a majority?)* were made available as online-accessible Zarr stores distributed across multiple institutions. DKRZ and JASMIN provided datasets through their object storage systems, while the NICAM team operated a dedicated web server. DKRZ additionally served IFS datasets via their eerie.cloud infrastructure. *(Note that this requires copying the data usually to a limited number of object stores, but more data centers are standardizing this. Also note what protocols (S3) were used)*. 
+38 of the 44 datasets were made available as online-accessible Zarr stores distributed across multiple institutions. DKRZ and JASMIN provided datasets through their object storage systems, while the NICAM team operated a dedicated web server. DKRZ additionally served IFS datasets via their eerie.cloud infrastructure. All of these datasets were accessible via https without authentication. This provides access to all sites, while saving the effort and disk space of copying the datasets to all centers.
 
 Given the high frequency of common data subset analysis by multiple users, implementing reverse proxy caching at hackathon sites would likely yield substantial performance improvements. However, establishing such infrastructure for multi-terabyte datasets with 50 MB chunk sizes presents significant technical challenges and was not implemented for this event. This capability should be prioritized in future iterations.
 
 Pre-hackathon data replication across nodes helped minimize transfer requirements during the event. The rclone utility proved effective for copying data from object stores and web servers, while NERSC provided datasets through the Globus file transfer system. The replication approach faces limitations when datasets arrive close to the hackathon deadline, as frequently occurs with dedicated simulations. Additionally, complete dataset replication requires substantial local storage resources and may include variables unnecessary for specific user communities. Consequently, selective replication through caching seems preferable for high-resolution dataset variants. Encouraging the use of object storage locally rather than copying would be valuable. 
 
-### Data catalog development
+### Data catalog development {#sec-catalog-development}
 
-> *Comment:* should this be merged with the catalog portion above? THis seems to be partially duplicative, and I was looking for the last paragraph here above
-
-Effective data discovery required a comprehensive catalog system accessible to users across all participating nodes. The catalog needed to support dataset variants (different spatial and temporal aggregations), multi-file datasets, and straightforward maintenance procedures.
-
-Two primary catalog standards were evaluated: SpatioTemporal Asset Catalogs (STAC) and Intake. While STAC has emerged as the standard for satellite and observational data, its design emphasizes cataloging numerous individual objects with explicit geometries, reflecting its origins in satellite imagery. This architecture suits datasets with millions of discrete assets but less effectively serves climate model outputs, which typically comprise unified global datasets available at multiple resolutions where spatiotemporal metadata is less critical.
-
-Intake version 0.7 was selected for its robust support of parameterized datasets, enabling syntax such as `icon_d3hp003(zoom=7, time="PT1H", time_method="mean")` to specify dataset variants. This approach clearly separates the model realization (`icon_d3hp003`) from spatiotemporal aggregation parameters. Intake 0.7 also supports multi-file dataset definitions, reducing preprocessing requirements during data preparation phases.
-
-The catalog was maintained through a GitHub repository with YAML-based dataset descriptions, largely adapted from existing nextGEMS and EERIE catalog entries by manual editing (manageable for the 44 datasets involved). A Python script executed via GitHub CI combined individual entries into a unified catalog [@degh_catalog]. In this process, locally available datasests were supplemented with those available online where needed. A second script generated the human-readable landing page [@degh_catalog] from the embedded descriptions. For online datasets, links to a JavaScript-based web viewer [@gridlook] enabled interactive data inspection.
+The catalog was maintained through a GitHub repository with YAML-based dataset descriptions, largely adapted from existing nextGEMS and EERIE catalog entries by manual editing (manageable for the 44 datasets involved). A Python script executed via GitHub CI combined individual entries into a unified catalog [@degh_catalog]. In this process, locally available datasests were supplemented with those available online where needed. A second script generated the human-readable landing page [@degh_catalog] from the embedded descriptions. 
 
 ## Lessons learned
 
