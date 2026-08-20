@@ -5,3 +5,6 @@ index_files/
 public/
 /.quarto/
 /summary.qmd
+
+# generated figures (see the figure tasks in pixi.toml)
+Images/preparation_timeline.*

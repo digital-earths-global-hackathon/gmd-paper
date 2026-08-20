@@ -46,6 +46,9 @@ abstract: |
 format:
   html:
     toc: true
+    # Figures without an extension resolve to the vector file generated for
+    # this format (see the figure tasks in pixi.toml); LaTeX picks .pdf itself.
+    default-image-extension: svg
   copernicus-gmd-pdf:
     keep-tex: true
 bibliography: references.bib
@@ -176,7 +179,7 @@ All these packages were added to the hackathon environment. The developers of th
 
 ## Preparation
 
->> **Comment:** Ideally add a Gantt chart here. 
+![Timeline of the technical preparation activities in the run-up to the global hackathon.](Images/preparation_timeline){#fig-preparation-timeline}
 
 Preparatory activities for the hackathon commenced in late 2023 with initial concept development and team identification. Throughout 2024, the fundamental framework was disseminated to prospective participants and institutional nodes were established. Formal technical preparations began in Fall 2024 with a two-day virtual workshop featuring presentations on core technical concepts and implementation strategies. Presentation materials were archived on the hackathon website [@degh_talks] with recordings distributed to participating teams for reference.
 
