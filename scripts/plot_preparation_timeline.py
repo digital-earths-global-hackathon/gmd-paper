@@ -20,6 +20,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 # (label, group, [(start, end), ...]) -- bottom row first
 TASKS = [
     ("Planning", "infra", [("2023-10-15", "2025-05-11")]),
+    # commits ab748e8c3fb2bb8482b52fee09ed4390a6b63750 to 38a939d8017a62afb37f830e8bdc1d47616bc414
+    # of https://github.com/digital-earths-global-hackathon/digital-earths-global-hackathon.github.io
     ("Install common\nsoftware stack", "infra", [("2024-11-01", "2025-01-01")]),
     ("Individual host\nweb pages setup", "infra", [("2024-12-15", "2025-01-10")]),
     (
@@ -27,6 +29,7 @@ TASKS = [
         "infra",
         [("2025-01-12", "2025-04-01")],
     ),
+    ("Define and improve data request", "data", [("2024-07-26", "2025-04-01")]),
     (
         "Initial distribution\nof DYAMOND data",
         "data",
@@ -89,7 +92,9 @@ def build_figure():
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
 
-    handles = [plt.Rectangle((0, 0), 1, 1, facecolor=color) for color, _ in GROUPS.values()]
+    handles = [
+        plt.Rectangle((0, 0), 1, 1, facecolor=color) for color, _ in GROUPS.values()
+    ]
     ax.legend(
         handles,
         [label for _, label in GROUPS.values()],
