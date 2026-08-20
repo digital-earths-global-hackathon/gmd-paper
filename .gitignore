@@ -5,6 +5,14 @@ index_files/
 public/
 /.quarto/
 /summary.qmd
+index.pdf
+copernicus.bst
+copernicus.cfg
+copernicus.cls
+index.tex
+references.md
 
 # generated figures (see the figure tasks in pixi.toml)
 Images/preparation_timeline.*
+
+
