@@ -25,7 +25,10 @@ jobs:
             pixi-version: v0.48.2
             cache: true
         - name: render
-          run: pixi run render --output-dir paper
+          run: |
+            pixi run render --output-dir paper
+            pixi run render-pdf --output-dir paper
+
         - name: upload
           id: upload
           uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
